@@ -262,6 +262,7 @@ const NavBar = () => {
               Subscribe
             </Button>
           </a>
+          {/*  */}
         </div>
       </Modal>
     </>
