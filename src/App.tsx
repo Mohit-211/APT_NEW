@@ -106,26 +106,21 @@ function AppContent() {
       <div className="content_main">
         <Routes>
           <Route path="*" element={<Navigate to="/" />} />
-
           {/* Home */}
           <Route path="/" element={<Home />} />
-
           {/* Auth */}
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verifyotp" element={<VerifyOtp />} />
           <Route path="/send-email-verification" element={<SendOtp />} />
-
           {/* Correct forgot password route */}
           <Route path="/forgot" element={<Forgot />} />
-
           {/* Create Account */}
           <Route path="/create-account" element={<CreateAccount />} />
-
           {/* Dashboard */}
           <Route path="/profile-edit" element={<Profile />} />
-
           {/* Core Calculators */}
+
           <Route
             path="/calculator/advanced-price-exhibit"
             element={
@@ -182,7 +177,6 @@ function AppContent() {
               </Calculator>
             }
           />
-
           {/* Proposals */}
           <Route path="/proposals" element={<ProposalNew />} />
           <Route path="/proposal" element={<Proposal />} />
@@ -204,12 +198,10 @@ function AppContent() {
             element={<LeadershipProposal />}
           />
           <Route path="/viewproposal" element={<Download />} />
-
           {/* Chat */}
           <Route path="/chat/layout" element={<ChatLayout />} />
           <Route path="/chat/stream" element={<ChatStreamComponent />} />
           <Route path="/proposal-editor" element={<EditorPage />} />
-
           {/* AI Proposal */}
           <Route path="/ai-proposals" element={<AIProposal />} />
         </Routes>

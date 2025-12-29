@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "./Banner.scss";
-import { Skeleton } from "antd";
 
 interface BannerProps {
   CalculatorName?: string;
@@ -14,33 +13,78 @@ const Banner: React.FC<BannerProps> = ({
   CalculatorImage,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoaded(true);
+  };
 
   return (
-    <div className="Banner">
-      <div className="section1">
-        <div className="left">
-          <h3>{CalculatorName}</h3>
-          <p>{CalculatorDesc}</p>
+    <div className="banner">
+      <div className="banner__container">
+        {/* Text Content */}
+        <div className="banner__content">
+          {CalculatorName && (
+            <h1 className="banner__title">{CalculatorName}</h1>
+          )}
+          {CalculatorDesc && (
+            <p className="banner__description">{CalculatorDesc}</p>
+          )}
         </div>
 
-        <div className="right">
+        {/* Image Section */}
+        <div className="banner__image-wrapper">
+          {/* Custom Skeleton Loader */}
           {!imageLoaded && (
-            <Skeleton.Avatar
-              shape="square"
-              style={{ width: 280, height: 280 }}
-              active
-            />
+            <div className="banner__skeleton">
+              <div className="banner__skeleton-shimmer" />
+            </div>
           )}
 
-          <img
-            src={CalculatorImage ?? "/assets/apt.png"}
-            alt="Banner Image"
-            className={`picture ${imageLoaded ? "loaded" : "not-loaded"}`}
-            onLoad={() => setImageLoaded(true)}
-            style={{ display: imageLoaded ? "block" : "none" }}
-          />
+          {/* Fallback Icon on Error */}
+          {imageError ? (
+            <div className="banner__fallback">
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+          ) : (
+            <img
+              src={CalculatorImage ?? "/assets/apt.png"}
+              alt={
+                CalculatorName
+                  ? `${CalculatorName} illustration`
+                  : "Banner illustration"
+              }
+              className={`banner__image ${
+                imageLoaded ? "banner__image--loaded" : ""
+              }`}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          )}
         </div>
       </div>
+
+      {/* Decorative Elements */}
+      <div className="banner__decoration banner__decoration--1" />
+      <div className="banner__decoration banner__decoration--2" />
     </div>
   );
 };

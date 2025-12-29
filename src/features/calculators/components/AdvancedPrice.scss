@@ -1,58 +1,490 @@
-.AdvancedPrice {
-  margin: auto;
-  .button_theme {
-    width: 100% !important;
-    margin-top: 20px !important;
+// Brand Colors
+$primary-red: #ed1c24;
+$primary-blue: #39a1dd;
+$white: #ffffff;
+$background: #fafbfc;
+$card-background: #ffffff;
+$text-primary: #1a1a1a;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
+$border-color: #e5e7eb;
+$success: #10b981;
+$warning: #f59e0b;
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+.advanced-price {
+  width: 100%;
+  margin: 0 auto;
+
+  // Header Section
+  &__header {
+    margin-bottom: 2rem;
   }
-  .videoo {
+
+  &__label {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 0.75rem;
+  }
+
+  // Content Area
+  &__content {
+    margin-top: 2rem;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  // Locked State
+  &__locked {
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+}
+
+// Custom Select Component
+.custom-select {
+  position: relative;
+  width: 100%;
+
+  &__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  &__trigger {
     width: 100%;
-  }
-  .form-control {
-    padding: 6px !important;
-    margin: 5px !important;
-    background: rgba(238, 35, 37, 0.1) !important;
-    @media (min-width: 767px) {
-      width: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: $card-background;
+    border: 2px solid $border-color;
+    border-radius: 12px;
+    font-size: 0.9375rem;
+    color: $text-primary;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    text-align: left;
+
+    &:hover {
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+    }
+
+    &--open {
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+
+      .custom-select__icon {
+        transform: rotate(180deg);
+      }
     }
   }
-  .blank_input {
-    background: white;
-    padding: 0px 4px;
-    border-radius: 6px;
-    margin: 8px 0px !important;
-    align-self: center !important;
-    // width: inherit !important;
+
+  &__value {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
   }
-  .Row_1 {
-    display: flex !important;
+
+  &__label {
+    font-weight: 600;
+    color: $text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__description {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    color: $text-secondary;
+    transition: transform 0.3s ease;
+    margin-left: 0.75rem;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: $card-background;
+    border: 1px solid $border-color;
+    border-radius: 12px;
+    box-shadow: $shadow-xl;
+    z-index: 20;
+    overflow: hidden;
+    animation: dropdownSlideIn 0.2s ease-out;
+    max-height: 400px;
+    overflow-y: auto;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $background;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: lighten($primary-blue, 20%);
+      border-radius: 4px;
+
+      &:hover {
+        background: $primary-blue;
+      }
+    }
+  }
+
+  &__option {
     width: 100%;
-    align-self: center !important;
-    .Col_1 {
-      align-self: center !important;
-      display: flex !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      width: 100%;
+    padding: 1rem 1.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover:not(&--locked) {
+      background: rgba($primary-blue, 0.05);
+    }
+
+    &--selected {
+      background: rgba($primary-blue, 0.08);
+    }
+
+    &--locked {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: rgba($text-muted, 0.05);
     }
   }
-  .profit_main {
-    li {
-      color: black;
-      font-style: normal;
-      font-weight: 500;
-      line-height: 34px;
+
+  &__option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__option-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__option-label {
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.9375rem;
+  }
+
+  &__option-description {
+    font-size: 0.8125rem;
+    color: $text-secondary;
+    line-height: 1.4;
+  }
+
+  &__check {
+    color: $primary-blue;
+    flex-shrink: 0;
+  }
+
+  &__lock {
+    color: $text-muted;
+    flex-shrink: 0;
+  }
+}
+
+// Locked Content
+.locked-content {
+  max-width: 500px;
+  margin: 0 auto;
+
+  &__icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      rgba($primary-red, 0.1),
+      rgba($primary-blue, 0.1)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $text-muted;
+  }
+
+  &__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: 0.75rem;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
     }
   }
-  @media (max-width: 767px) {
-    .Row_1 {
-      display: block !important;
+
+  &__description {
+    font-size: 1rem;
+    color: $text-secondary;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+
+    strong {
+      color: $text-primary;
+      font-weight: 600;
+    }
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, $primary-red, darken($primary-red, 5%));
+    color: $white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        darken($primary-red, 5%),
+        darken($primary-red, 10%)
+      );
+      box-shadow: $shadow-md;
+      transform: translateY(-1px);
+      color: $white;
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }
-.Button_section {
-  display: flex !important;
-  width: 100%;
+
+// Legacy Support - Maintain backward compatibility
+.AdvancedPrice {
   .button_theme {
-    margin: 10px;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, $primary-red, darken($primary-red, 5%));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    font-size: 0.9375rem;
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        darken($primary-red, 5%),
+        darken($primary-red, 10%)
+      );
+      box-shadow: $shadow-md;
+      transform: translateY(-1px);
+    }
+  }
+
+  .videoo {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: $shadow-md;
+  }
+
+  .form-control {
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    background: rgba($primary-red, 0.05);
+    border: 2px solid $border-color;
+    border-radius: 10px;
+    font-size: 0.9375rem;
+    color: $text-primary;
+    font-family: inherit;
+    width: 100%;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+    }
+
+    @media (min-width: 768px) {
+      width: auto;
+    }
+  }
+
+  .blank_input {
+    background: white;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    margin: 0.5rem 0;
+    border: 2px solid $border-color;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+    }
+  }
+
+  .Row_1 {
+    display: flex;
+    width: 100%;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .Col_1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .profit_main {
+    li {
+      color: $text-primary;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 1.8;
+      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+    }
+  }
+}
+
+.Button_section {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  .button_theme {
+    flex: 1;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    .button_theme {
+      width: 100%;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .advanced-price {
+    &__header {
+      margin-bottom: 1.5rem;
+    }
+
+    &__content {
+      margin-top: 1.5rem;
+    }
+  }
+
+  .custom-select {
+    &__trigger {
+      padding: 0.875rem 1rem;
+    }
+
+    &__option {
+      padding: 0.875rem 1rem;
+    }
+  }
+
+  .locked-content {
+    padding: 2rem 1rem;
+
+    &__icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .custom-select__dropdown,
+  .custom-select__overlay {
+    display: none;
+  }
+
+  .advanced-price__locked {
+    display: none;
   }
 }
