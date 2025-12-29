@@ -1,20 +1,448 @@
-.Download {
-  margin: 6rem 0;
+// ============================================
+// DOWNLOAD PAGE - Document Viewer UI
+// ============================================
+
+// Brand Colors
+$brand-red: #ed1c24;
+$brand-red-dark: #c8232c;
+$brand-blue: #174f78;
+$brand-blue-light: #39a1dd;
+
+// Semantic Colors
+$white: #ffffff;
+$background: #f1f5f9;
+$surface: #ffffff;
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$text-muted: #94a3b8;
+$border: #e2e8f0;
+
+// Status Colors
+$error: #dc2626;
+
+// Shadows
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+
+// Border Radius
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 18px;
+
+// ============================================
+// PAGE LAYOUT
+// ============================================
+
+.download-page {
+  min-height: 100vh;
+  background: $background;
+  display: flex;
+  flex-direction: column;
+}
+
+// ============================================
+// AUTH REQUIRED
+// ============================================
+
+.auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
   text-align: center;
-  min-height: 100dvh;
-  .Download_inner {
+
+  &__icon {
+    width: 80px;
+    height: 80px;
     display: flex;
+    align-items: center;
     justify-content: center;
-    h2 {
-      font-weight: bolder;
+    background: linear-gradient(
+      135deg,
+      rgba($brand-blue-light, 0.1) 0%,
+      rgba($brand-red, 0.08) 100%
+    );
+    border-radius: 50%;
+    color: $brand-blue-light;
+    margin-bottom: 1.5rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+  }
+
+  &__message {
+    font-size: 1rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+  }
+}
+
+// ============================================
+// PAGE HEADER
+// ============================================
+
+.download-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 2rem;
+  background: $surface;
+  border-bottom: 1px solid $border;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      $brand-blue 0%,
+      darken($brand-blue, 8%) 100%
+    );
+    border-radius: $radius-md;
+    color: $white;
+
+    @media (max-width: 480px) {
+      display: none;
     }
   }
-  .button_theme {
-    width: 15%;
-    margin: 0px 20px;
-    // margin: auto;
+
+  &__info {
+    flex: 1;
+    min-width: 0;
   }
-  iframe {
-    margin: 20px 0px;
+
+  &__badge {
+    display: inline-block;
+    padding: 0.1875rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: $brand-red;
+    color: $white;
+    border-radius: $radius-sm;
+    margin-bottom: 0.375rem;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    @media (max-width: 480px) {
+      font-size: 1rem;
+    }
+  }
+
+  &__filename {
+    font-size: 0.8125rem;
+    color: $text-muted;
+    margin: 0.125rem 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: $text-secondary;
+  background: transparent;
+  border: 1.5px solid $border;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+
+  &:hover {
+    background: $background;
+    color: $text-primary;
+    border-color: darken($border, 10%);
+  }
+
+  span {
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+}
+
+// ============================================
+// VIEWER CONTAINER
+// ============================================
+
+.viewer-container {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    padding-bottom: 5rem; // Space for mobile footer
+  }
+}
+
+.viewer-wrapper {
+  flex: 1;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewer-iframe {
+  flex: 1;
+  width: 100%;
+  min-height: 70vh;
+  border: none;
+  display: block;
+
+  @media (max-width: 768px) {
+    min-height: 60vh;
+  }
+}
+
+// ============================================
+// LOADING STATE
+// ============================================
+
+.viewer-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  text-align: center;
+
+  &__spinner {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      rgba($brand-blue-light, 0.1) 0%,
+      rgba($brand-blue, 0.08) 100%
+    );
+    border-radius: 50%;
+    color: $brand-blue-light;
+    margin-bottom: 1.5rem;
+
+    svg {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &__text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 0.25rem;
+  }
+
+  &__hint {
+    font-size: 0.875rem;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// ERROR STATE
+// ============================================
+
+.viewer-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: $text-muted;
+
+  svg {
+    margin-bottom: 1rem;
+    opacity: 0.6;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+  }
+
+  &__message {
+    font-size: 0.9375rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+    max-width: 400px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+}
+
+// ============================================
+// MOBILE FOOTER
+// ============================================
+
+.download-footer {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: $surface;
+  border-top: 1px solid $border;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+}
+
+// ============================================
+// BUTTONS
+// ============================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: $radius-md;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  // Primary - Red accent
+  &--primary {
+    background: linear-gradient(135deg, $brand-red 0%, $brand-red-dark 100%);
+    color: $white;
+    box-shadow: 0 2px 6px rgba($brand-red, 0.25);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 10px rgba($brand-red, 0.35);
+      transform: translateY(-1px);
+    }
+  }
+
+  // Secondary - Blue outline
+  &--secondary {
+    background: transparent;
+    color: $brand-blue-light;
+    border: 1.5px solid $brand-blue-light;
+
+    &:hover:not(:disabled) {
+      background: $brand-blue-light;
+      color: $white;
+    }
+  }
+
+  // Full width
+  &--full {
+    width: 100%;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: 480px) {
+  .download-header {
+    &__content {
+      width: 100%;
+      order: 2;
+    }
+
+    .back-button {
+      order: 1;
+    }
   }
 }

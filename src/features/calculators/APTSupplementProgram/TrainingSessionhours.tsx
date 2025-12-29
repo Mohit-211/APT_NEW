@@ -1,67 +1,89 @@
-import React, { useState } from 'react';
-import { Form, Row } from 'react-bootstrap';
-const TrainingSessionhours = () => {
-  const [people, setPeople] = useState('');
-  const levelsData = {
-    '20': { people: "Up to 20 people", amount: " $1400 - $2000 " },
-    '30': { people: "Up to 30 people", amount: " $2100 - $2900" },
-    '50': { people: "Up to 50 people", amount: " $3500 - $4500" },
-    '75': { people: "Up to 75 people", amount: " $5250 - $6000" },
-  };
-  const amount = people ? levelsData[people]?.amount : '';
-  const peopleupto = people ? levelsData[people]?.people : '';
+import { useState } from "react";
+import { Select, Typography, Space } from "antd";
+
+// import "./TrainingSessionhours.scss";
+
+const { Title, Text } = Typography;
+
+type PeopleCount = "20" | "30" | "50" | "75";
+
+type PricingData = {
+  people: string;
+  amount: string;
+};
+
+const LEVELS_DATA: Record<PeopleCount, PricingData> = {
+  "20": { people: "Up to 20 people", amount: "$1,400 - $2,000" },
+  "30": { people: "Up to 30 people", amount: "$2,100 - $2,900" },
+  "50": { people: "Up to 50 people", amount: "$3,500 - $4,500" },
+  "75": { people: "Up to 75 people", amount: "$5,250 - $6,000" },
+};
+
+const PEOPLE_OPTIONS: { label: string; value: PeopleCount }[] = [
+  { label: "20", value: "20" },
+  { label: "30", value: "30" },
+  { label: "50", value: "50" },
+  { label: "75", value: "75" },
+];
+
+const TrainingSessionhours: React.FC = () => {
+  const [peopleCount, setPeopleCount] = useState<PeopleCount | null>(null);
+
+  const peopleUpto = peopleCount ? LEVELS_DATA[peopleCount].people : "";
+
+  const amount = peopleCount ? LEVELS_DATA[peopleCount].amount : "";
+
   return (
     <div className="TrainingSessionhours">
-      <h5>Training Session hours</h5>
-      <Row >
-        <Form.Group className='mb-2'>
-          <Form.Label>Question:</Form.Label>
-          <Form.Select >
-            <option value="">select question---</option>
-            <option value="How much should I charge a TrainingSessionhours client">I have been asked to facilitate a training session, what should I charge??</option>
-          </Form.Select>
-        </Form.Group>
-        <Form.Group className='mb-2' >
-          <Form.Label>How many people will be in the session?: </Form.Label>
-          <Form.Select value={people} onChange={(e) => setPeople(e.target.value)}>
-            <option value="">Select People</option>
-            <option value="20">20</option>
-            <option value="30">30</option>
-            <option value="50">50</option>
-            <option value="75">75</option>
-            {/* {Object.keys(levelsData).map((level, index) => (
-                <option key={index} value={level}>
-                  {level}
-                </option>
-              ))} */}
-          </Form.Select>
-        </Form.Group>
-        {/* <Form.Group className='mb-2' >
-            <Form.Label>How many people will be in the session?: </Form.Label>
-            <Form.Select value={hour} onChange={(e) => setHour(e.target.value)}>
-              <option value="">Select People</option>
-              <option value="1-2">1-2 hours</option>
-              <option value="2-3">2-3 hours</option>
-            </Form.Select>
-          </Form.Group> */}
-        <div className='Row_1'>
-          <div className='Col_1 blank_input'>
-            People :
-            <div className='Col_12 blank_input'>
-              {peopleupto}
-            </div>
+      <Title level={5}>Training Session (1–2 Hours)</Title>
+
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        {/* Question */}
+        <div>
+          <Text strong>Question:</Text>
+          <Select
+            value="I have been asked to facilitate a training session, what should I charge?"
+            options={[
+              {
+                label:
+                  "I have been asked to facilitate a training session, what should I charge?",
+                value:
+                  "I have been asked to facilitate a training session, what should I charge?",
+              },
+            ]}
+            disabled
+            style={{ width: "100%", marginTop: 4 }}
+          />
+        </div>
+
+        {/* People Count */}
+        <div>
+          <Text strong>How many people will be in the session?</Text>
+          <Select<PeopleCount>
+            placeholder="Select number of people"
+            value={peopleCount}
+            options={PEOPLE_OPTIONS}
+            onChange={(value) => setPeopleCount(value)}
+            style={{ width: "100%", marginTop: 4 }}
+          />
+        </div>
+
+        {/* People */}
+        <div className="TrainingSessionhours__info">
+          <Text strong>People:</Text>
+          <div className="TrainingSessionhours__value">
+            {peopleUpto || "--"}
           </div>
         </div>
-        <div className='Row_1'>
-          <div className='Col_1 blank_input'>
-            Fee:
-            <div className='Col_12 blank_input'>
-              {amount}
-            </div>
-          </div>
+
+        {/* Fee */}
+        <div className="TrainingSessionhours__info">
+          <Text strong>Fee:</Text>
+          <div className="TrainingSessionhours__value">{amount || "--"}</div>
         </div>
-      </Row>
+      </Space>
     </div>
   );
 };
+
 export default TrainingSessionhours;

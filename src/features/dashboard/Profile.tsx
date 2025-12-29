@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from "react";
-import "./Profile.scss";
-import ProfileDummy from "@/assets/profile.png";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Form, Input, Space } from "antd";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Camera,
+  Eye,
+  EyeOff,
+  Check,
+  AlertCircle,
+  X,
+  Settings,
+  Shield,
+} from "lucide-react";
 import { getClientProfile } from "@/app/store/slices/getClientProfileSlice";
 import {
   ChangePasswordAPI,
@@ -13,8 +24,13 @@ import {
   UserEditProfileAPI,
 } from "@/utils/api/Api";
 import { Image_URL } from "@/utils/constants/host";
-import DescriptionAlerts from "@/utils/constants/alerts";
+import ProfileDummy from "@/assets/profile.png";
 import Signin from "@/features/auth/Signin";
+import "./Profile.scss";
+
+// ============================================
+// TYPES
+// ============================================
 
 interface ProfileData {
   name: string;
@@ -25,61 +41,71 @@ interface ProfileData {
   }>;
 }
 
-interface AlertConfig {
-  text: string;
-  icon: "success" | "error" | "warning" | "info";
+interface Toast {
+  show: boolean;
+  message: string;
+  type: "success" | "error";
 }
+
+type TabValue = "edit" | "password";
+
+// ============================================
+// COMPONENT
+// ============================================
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [form] = Form.useForm();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [name, setName] = useState<string>("");
-  const [mobile, setMobile] = useState<string>("");
-  const [value, setValue] = useState<"edit" | "change_password">("edit");
-  const [old_password, setOldPassword] = useState<string>("");
-  const [new_password, setNewPassword] = useState<string>("");
-  const [new_c_password, setNewCPassword] = useState<string>("");
-  const [alert, setAlert] = useState<boolean>(false);
-  const [alertConfig, setAlertConfig] = useState<AlertConfig>({
-    text: "",
-    icon: "info",
-  });
-  const [isClient, setIsClient] = useState<boolean>(false);
-
+  // Auth state
+  const [isClient, setIsClient] = useState(false);
   const storedValue = localStorage.getItem("UserLoginTokenApt");
   const UserStatus = localStorage.getItem("UserStatus");
 
+  // Profile state
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
+
+  // Password state
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // UI state
+  const [activeTab, setActiveTab] = useState<TabValue>("edit");
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<Toast>({
+    show: false,
+    message: "",
+    type: "success",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Initialize client
   useEffect(() => {
     setIsClient(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }, []);
-
-  // Fetch profile details
+  // Fetch profile
   useEffect(() => {
     if (storedValue && UserStatus !== "DEACTIVATE") {
       GetProfile()
         .then((data) => {
           setProfile(data);
-          setName(data?.name);
-          setMobile(data?.mobile);
-          form.setFieldsValue({
-            name: data?.name,
-            email: data?.email,
-            phone: data?.mobile,
-          });
+          setName(data?.name || "");
+          setMobile(data?.mobile || "");
         })
-        .catch((error) => {
-          console.log(error);
-        });
+        .catch(console.error);
     }
-  }, [storedValue, UserStatus, form]);
+  }, [storedValue, UserStatus]);
 
   // Load redux profile
   useEffect(() => {
@@ -88,302 +114,450 @@ const Profile: React.FC = () => {
     }
   }, [dispatch, storedValue]);
 
-  const handleValueChangeEdit = () => setValue("edit");
-  const handleValueChangePassword = () => setValue("change_password");
+  // Auto-hide toast
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(
+        () => setToast((prev) => ({ ...prev, show: false })),
+        4000
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
 
-  const handlePhoneChange = (newPhone: string | undefined) =>
-    setMobile(newPhone || "");
+  // Show toast helper
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ show: true, message, type });
+  };
 
+  // Handle image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        showToast("Please select an image file", "error");
+        return;
+      }
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleAlertSubmit1 = () => {
-    const missingFields: string[] = [];
-    if (!old_password) missingFields.push("Old Password");
-    if (!new_password) missingFields.push("New Password");
-    if (!new_c_password) missingFields.push("Confirm Password");
+  const triggerFileInput = () => fileInputRef.current?.click();
 
-    if (missingFields.length > 0) {
-      setAlert(true);
-      setAlertConfig({
-        icon: "error",
-        text: `Please fill in: ${missingFields.join(", ")}.`,
+  // Get profile image URL
+  const getProfileImage = () => {
+    if (previewUrl) return previewUrl;
+    if (profile?.attachements?.length) {
+      return `${Image_URL}${profile.attachements[0].file_name}`;
+    }
+    return ProfileDummy;
+  };
+
+  // Validate edit form
+  const validateEditForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!name.trim()) newErrors.name = "Name is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Validate password form
+  const validatePasswordForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!oldPassword) newErrors.oldPassword = "Old password is required";
+    if (!newPassword) newErrors.newPassword = "New password is required";
+    if (newPassword.length < 6)
+      newErrors.newPassword = "Password must be at least 6 characters";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    if (newPassword !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle profile update
+  const handleUpdateProfile = async () => {
+    if (!validateEditForm()) return;
+
+    setIsLoading(true);
+    try {
+      const res = await UserEditProfileAPI(name, selectedImage, mobile);
+      if (storedValue) {
+        dispatch(getClientProfile(storedValue) as any);
+      }
+      setProfile(res.data);
+      if (res.data?.code === 200 || res.data?.status === 200) {
+        showToast("Profile updated successfully", "success");
+        setSelectedImage(null);
+        setPreviewUrl("");
+      }
+    } catch (error) {
+      showToast("Failed to update profile", "error");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle password change
+  const handleChangePassword = async () => {
+    if (!validatePasswordForm()) return;
+
+    setIsLoading(true);
+    try {
+      const res = await ChangePasswordAPI({
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
       });
-      setTimeout(() => setAlert(false), 7000);
-    } else {
-      handleChangePassword();
+      if (res.data?.code === 200 || res.data?.status === 200) {
+        showToast("Password changed successfully. Redirecting...", "success");
+        setTimeout(() => navigate("/signin"), 2000);
+      }
+    } catch (error: any) {
+      showToast(
+        error.response?.data?.message || "Failed to change password",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setNewPassword("");
-    setNewCPassword("");
+  // Reset password form
+  const handleResetPasswordForm = () => {
     setOldPassword("");
-    form.resetFields();
+    setNewPassword("");
+    setConfirmPassword("");
+    setErrors({});
   };
 
-  // Update profile
-  const handleSubmit = () => {
-    setAlert(false);
-
-    UserEditProfileAPI(name, selectedImage, mobile)
-      .then((res) => {
-        if (storedValue) {
-          dispatch(getClientProfile(storedValue) as any);
-        }
-        setProfile(res.data);
-
-        if (res.data?.code === 200 || res.data?.status === 200) {
-          setAlert(true);
-          setAlertConfig({
-            text: "Profile Updated Successfully",
-            icon: "success",
-          });
-
-          setTimeout(() => setAlert(false), 3000);
-        }
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // Change password
-  const handleChangePassword = () => {
-    ChangePasswordAPI({
-      old_password,
-      new_password,
-      confirm_password: new_c_password,
-    })
-      .then((res) => {
-        if (res.data?.code === 200 || res.data?.status === 200) {
-          setAlert(true);
-          setAlertConfig({
-            text: "Password changed Successfully",
-            icon: "success",
-          });
-
-          setTimeout(() => navigate("/signin"), 1000);
-        }
-      })
-      .catch((error: any) => {
-        setAlert(true);
-        setAlertConfig({
-          text: error.response?.data?.message || "Error changing password",
-          icon: "error",
-        });
-      });
-  };
-
+  // Auth check
   if (!isClient || !storedValue) return <Signin />;
 
   return (
-    <>
-      {alert && (
-        <DescriptionAlerts text={alertConfig.text} icon={alertConfig.icon} />
+    <div className="profile-page">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast toast--${toast.type}`}>
+          {toast.type === "success" ? (
+            <Check size={18} />
+          ) : (
+            <AlertCircle size={18} />
+          )}
+          <span>{toast.message}</span>
+          <button
+            className="toast__close"
+            onClick={() => setToast((prev) => ({ ...prev, show: false }))}
+          >
+            <X size={16} />
+          </button>
+        </div>
       )}
 
-      <div className="profile">
-        <div className="profile-container">
-          <div className="profile_inner">
-            {/* Header */}
-            <div className="section1">
-              <div>
-                {profile?.attachements?.length ? (
-                  <img
-                    src={`${Image_URL}${profile.attachements[0].file_name}`}
-                    width={100}
-                    height={100}
-                    className="Picture"
-                    alt="Profile"
-                  />
-                ) : (
-                  <img
-                    src={ProfileDummy}
-                    width={100}
-                    height={100}
-                    className="Picture"
-                    alt="Default Profile"
-                  />
-                )}
-              </div>
-
-              <div>
-                <h5 style={{ textTransform: "capitalize" }}>{profile?.name}</h5>
-                <h6>Set up your Automated Price Tool 2.0 account.</h6>
-              </div>
+      <div className="profile-container">
+        {/* Profile Header Card */}
+        <header className="profile-header">
+          <div className="profile-header__avatar-section">
+            <div className="profile-header__avatar">
+              <img src={getProfileImage()} alt="Profile" />
+              <button
+                className="profile-header__avatar-edit"
+                onClick={triggerFileInput}
+              >
+                <Camera size={16} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="visually-hidden"
+              />
             </div>
+          </div>
+          <div className="profile-header__info">
+            <h1 className="profile-header__name">{profile?.name || "User"}</h1>
+            <p className="profile-header__email">{profile?.email}</p>
+            <span className="profile-header__badge">
+              <User size={14} />
+              Active Account
+            </span>
+          </div>
+        </header>
 
-            {/* Tabs */}
-            <div className="section2">
-              <div className="btn_tab">
-                <button
-                  className="btn_theme_div"
-                  style={{
-                    backgroundColor: value === "edit" ? "#174F78" : "#f0f4f7",
-                    color: value === "edit" ? "white" : "unset",
-                  }}
-                  onClick={handleValueChangeEdit}
-                >
-                  Edit
-                </button>
+        {/* Main Content */}
+        <div className="profile-content">
+          {/* Sidebar Tabs */}
+          <nav className="profile-tabs">
+            <button
+              className={`profile-tab ${
+                activeTab === "edit" ? "profile-tab--active" : ""
+              }`}
+              onClick={() => setActiveTab("edit")}
+            >
+              <Settings size={18} />
+              <span className="profile-tab__text">Edit Profile</span>
+            </button>
+            <button
+              className={`profile-tab ${
+                activeTab === "password" ? "profile-tab--active" : ""
+              }`}
+              onClick={() => setActiveTab("password")}
+            >
+              <Shield size={18} />
+              <span className="profile-tab__text">Change Password</span>
+            </button>
+          </nav>
 
-                <button
-                  className="btn_theme_div"
-                  style={{
-                    backgroundColor:
-                      value === "change_password" ? "#174F78" : "#f0f4f7",
-                    color: value === "change_password" ? "white" : "unset",
-                  }}
-                  onClick={handleValueChangePassword}
-                >
-                  Change Password
-                </button>
-              </div>
+          {/* Form Section */}
+          <div className="profile-form-section">
+            {activeTab === "edit" ? (
+              <div className="profile-form">
+                <div className="profile-form__header">
+                  <h2 className="profile-form__title">Edit Profile</h2>
+                  <p className="profile-form__subtitle">
+                    Update your personal information
+                  </p>
+                </div>
 
-              <div className="line"></div>
-
-              {/* Edit section */}
-              <div className="Form_ctm">
-                {value === "edit" ? (
-                  <div>
-                    <Form form={form} layout="vertical" autoComplete="off">
-                      <div className="profiletop">
-                        {selectedImage ? (
-                          <img
-                            src={URL.createObjectURL(selectedImage)}
-                            height="50"
-                            width="50"
-                            style={{ borderRadius: "50px" }}
-                          />
-                        ) : (
-                          <img
-                            src={ProfileDummy}
-                            height="50"
-                            width="50"
-                            style={{ borderRadius: "100px" }}
-                          />
+                <div className="profile-form__body">
+                  {/* Profile Picture Upload */}
+                  <div className="form-field form-field--upload">
+                    <label className="form-field__label">Profile Picture</label>
+                    <div className="upload-preview">
+                      <img
+                        src={getProfileImage()}
+                        alt="Preview"
+                        className="upload-preview__image"
+                      />
+                      <div className="upload-preview__actions">
+                        <button
+                          className="btn btn--outline-sm"
+                          onClick={triggerFileInput}
+                        >
+                          <Camera size={16} />
+                          Change Photo
+                        </button>
+                        {(selectedImage || profile?.attachements?.length) && (
+                          <span className="upload-preview__hint">
+                            {selectedImage
+                              ? "New image selected"
+                              : "Current photo"}
+                          </span>
                         )}
-
-                        <label className="custom_file_upload">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                          />
-                          &nbsp; Add Profile picture
-                        </label>
                       </div>
-
-                      <Form.Item name="name" label="Name">
-                        <Input
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                        />
-                      </Form.Item>
-
-                      <Space>
-                        <Form.Item name="email" label="E-mail">
-                          <Input disabled />
-                        </Form.Item>
-
-                        <Form.Item name="phone" label="Phone Number">
-                          <PhoneInput
-                            defaultCountry="US"
-                            value={mobile}
-                            onChange={handlePhoneChange}
-                          />
-                        </Form.Item>
-                      </Space>
-                    </Form>
-
-                    <div className="buttons">
-                      <button
-                        className="button_theme buttonUpdate"
-                        onClick={handleSubmit}
-                      >
-                        Update
-                      </button>
                     </div>
                   </div>
-                ) : (
-                  // Password section
-                  <div>
-                    <Form layout="vertical" autoComplete="off">
-                      <Form.Item
-                        label="Old Password"
-                        name="oldpassword"
-                        rules={[{ required: true }]}
-                      >
-                        <Input.Password
-                          value={old_password}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                        />
-                      </Form.Item>
 
-                      <Form.Item
-                        label="New Password"
-                        name="newpassword"
-                        rules={[{ required: true }]}
-                      >
-                        <Input.Password
-                          value={new_password}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                      </Form.Item>
+                  {/* Name Field */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <User size={16} />
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      className={`form-input ${
+                        errors.name ? "form-input--error" : ""
+                      }`}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full name"
+                    />
+                    {errors.name && (
+                      <span className="form-field__error">{errors.name}</span>
+                    )}
+                  </div>
 
-                      <Form.Item
-                        name="confirmpassword"
-                        label="Confirm Password"
-                        dependencies={["newpassword"]}
-                        hasFeedback
-                        rules={[
-                          { required: true },
-                          ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (
-                                !value ||
-                                getFieldValue("newpassword") === value
-                              ) {
-                                return Promise.resolve();
-                              }
-                              return Promise.reject(
-                                new Error("Passwords do not match!")
-                              );
-                            },
-                          }),
-                        ]}
-                      >
-                        <Input.Password
-                          onChange={(e) => setNewCPassword(e.target.value)}
-                        />
-                      </Form.Item>
-                    </Form>
+                  {/* Email Field (Disabled) */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <Mail size={16} />
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      className="form-input form-input--disabled"
+                      value={profile?.email || ""}
+                      disabled
+                    />
+                    <span className="form-field__hint">
+                      Email cannot be changed
+                    </span>
+                  </div>
 
-                    <div className="buttons_passwordChange">
-                      <button
-                        className="button_theme buttonCancel"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </button>
-
-                      <button
-                        className="button_theme ChangePassword"
-                        onClick={handleAlertSubmit1}
-                      >
-                        Change Password
-                      </button>
+                  {/* Phone Field */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <Phone size={16} />
+                      Phone Number
+                    </label>
+                    <div className="phone-input-wrapper">
+                      <PhoneInput
+                        defaultCountry="US"
+                        value={mobile}
+                        onChange={(value) => setMobile(value || "")}
+                        className="phone-input"
+                      />
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="profile-form__footer">
+                  <button
+                    className="btn btn--primary"
+                    onClick={handleUpdateProfile}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Updating..." : "Save Changes"}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="profile-form">
+                <div className="profile-form__header">
+                  <h2 className="profile-form__title">Change Password</h2>
+                  <p className="profile-form__subtitle">
+                    Keep your account secure
+                  </p>
+                </div>
+
+                <div className="profile-form__body">
+                  {/* Old Password */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <Lock size={16} />
+                      Current Password
+                    </label>
+                    <div className="input-wrapper">
+                      <input
+                        type={showOldPassword ? "text" : "password"}
+                        className={`form-input ${
+                          errors.oldPassword ? "form-input--error" : ""
+                        }`}
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="Enter current password"
+                      />
+                      <button
+                        type="button"
+                        className="input-wrapper__toggle"
+                        onClick={() => setShowOldPassword(!showOldPassword)}
+                      >
+                        {showOldPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.oldPassword && (
+                      <span className="form-field__error">
+                        {errors.oldPassword}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* New Password */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <Lock size={16} />
+                      New Password
+                    </label>
+                    <div className="input-wrapper">
+                      <input
+                        type={showNewPassword ? "text" : "password"}
+                        className={`form-input ${
+                          errors.newPassword ? "form-input--error" : ""
+                        }`}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                      />
+                      <button
+                        type="button"
+                        className="input-wrapper__toggle"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.newPassword && (
+                      <span className="form-field__error">
+                        {errors.newPassword}
+                      </span>
+                    )}
+                    <span className="form-field__hint">
+                      Minimum 6 characters
+                    </span>
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div className="form-field">
+                    <label className="form-field__label">
+                      <Lock size={16} />
+                      Confirm New Password
+                    </label>
+                    <div className="input-wrapper">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        className={`form-input ${
+                          errors.confirmPassword ? "form-input--error" : ""
+                        }`}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                      />
+                      <button
+                        type="button"
+                        className="input-wrapper__toggle"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff size={18} />
+                        ) : (
+                          <Eye size={18} />
+                        )}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <span className="form-field__error">
+                        {errors.confirmPassword}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="profile-form__footer">
+                  <button
+                    className="btn btn--ghost"
+                    onClick={handleResetPasswordForm}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn--primary"
+                    onClick={handleChangePassword}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Changing..." : "Change Password"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

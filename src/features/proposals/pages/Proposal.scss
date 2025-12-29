@@ -1,93 +1,644 @@
-.ProposalNew {
-  margin: 6rem 0px;
-  .proposal_container {
+// ============================================
+// PROPOSAL PAGE - Document Browser UI
+// ============================================
+
+// Brand Colors - BALANCED
+$brand-red: #ed1c24;
+$brand-red-light: #ff4d54;
+$brand-red-dark: #c8232c;
+$brand-blue: #174f78;
+$brand-blue-light: #39a1dd;
+
+// Semantic Colors
+$white: #ffffff;
+$background: #f8fafc;
+$surface: #ffffff;
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$text-muted: #94a3b8;
+$border: #e2e8f0;
+
+// Shadows
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+
+// Z-Index
+$z-drawer-overlay: 1000;
+$z-drawer: 1001;
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+$transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+// Border Radius
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 18px;
+
+// ============================================
+// PAGE CONTAINER
+// ============================================
+
+.proposal-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  padding-bottom: 3rem;
+  overflow-x: hidden;
+}
+
+// ============================================
+// AUTH REQUIRED STATE
+// ============================================
+
+.auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+  text-align: center;
+
+  &__icon {
+    width: 80px;
+    height: 80px;
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    height: 100vh;
-    /* Adjust this height as needed */
-    overflow: hidden;
-  }
-  .pagination_custom {
-    margin: 20px 0px;
-    display: flex;
+    align-items: center;
     justify-content: center;
+    background: linear-gradient(
+      135deg,
+      rgba($brand-red, 0.1) 0%,
+      rgba($brand-blue-light, 0.1) 100%
+    );
+    border-radius: 50%;
+    color: $brand-red;
+    margin-bottom: 1.5rem;
   }
-  .paginationButtonActive {
-    background-color: red;
-    color: white;
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.5rem;
   }
-  // .sidebar{
-  //     width: 30%;
-  // }
-  .category_list {
-    max-height: calc(100vh - 100px);
+
+  &__message {
+    font-size: 1rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+    max-width: 400px;
+  }
+}
+
+// ============================================
+// FILTER BUTTON (MOBILE)
+// ============================================
+
+.filter-button {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: $brand-red;
+  background: $surface;
+  border: 2px solid $brand-red;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $brand-red;
+    color: $white;
+  }
+
+  @media (max-width: 900px) {
+    display: inline-flex;
+  }
+}
+
+// ============================================
+// DRAWER (MOBILE)
+// ============================================
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: $z-drawer-overlay;
+  animation: fadeIn 200ms ease;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 85%;
+  max-width: 320px;
+  background: $surface;
+  z-index: $z-drawer;
+  box-shadow: $shadow-xl;
+  display: flex;
+  flex-direction: column;
+  animation: slideInLeft 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $border;
+    background: linear-gradient(135deg, $brand-red 0%, $brand-red-dark 100%);
+    color: $white;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__close {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($white, 0.15);
+    border: none;
+    border-radius: $radius-sm;
+    color: $white;
+    cursor: pointer;
+    transition: background $transition-fast;
+
+    &:hover {
+      background: rgba($white, 0.25);
+    }
+  }
+
+  &__content {
+    flex: 1;
     overflow-y: auto;
-    margin-top: 10px;
+    padding: 1rem;
   }
-  .selectedCategory {
-    background-color: #c8232c;
-    color: #ffffff;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-  .category_item {
-    border-radius: 8px;
-    margin-top: 8px;
-    // color: #C8232C;
-    font-weight: bold;
+  to {
+    opacity: 1;
   }
-  .sidebar {
-    flex: 0 0 auto;
-    width: 20%;
-    overflow-y: hidden;
-    padding: 20px;
-    background: black;
-    color: white;
-    padding: 10px;
-    border-radius: 11px;
-    border: 1px solid #fff;
-    background: #0e1122;
-    box-shadow: 2px 2px 30px 0px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
   }
-  .category_list {
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
-    margin-top: 10px;
+  to {
+    transform: translateX(0);
   }
-  .content {
-    width: 75%;
-    height: 100vh;
-    overflow-x: hidden;
+}
+
+// ============================================
+// MAIN CONTAINER
+// ============================================
+
+.proposal-container {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    gap: 1rem;
   }
-  .content {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .content::-webkit-scrollbar {
+}
+
+// ============================================
+// SIDEBAR
+// ============================================
+
+.proposal-sidebar {
+  flex-shrink: 0;
+  width: 220px;
+
+  @media (max-width: 900px) {
     display: none;
   }
-  @media (min-width: 767px) {
-    .filter_icon {
-      display: none;
+}
+
+// ============================================
+// CONTENT AREA
+// ============================================
+
+.proposal-content {
+  flex: 1;
+  min-width: 0; // Critical: prevents flex item from overflowing
+  max-width: 100%;
+}
+
+// ============================================
+// CATEGORY LIST
+// ============================================
+
+.category-list {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  position: sticky;
+  top: 1rem;
+
+  &--drawer {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $white;
+    background: linear-gradient(135deg, $brand-red 0%, $brand-red-dark 100%);
+    padding: 0.875rem 1rem;
+    margin: 0;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      opacity: 0.9;
+    }
+
+    .category-list--drawer & {
+      background: transparent;
+      color: $text-primary;
+      padding: 0 0 0.75rem;
+      border-bottom: 2px solid $border;
+      margin-bottom: 0.5rem;
     }
   }
-  @media (max-width: 767px) {
-    .heading {
-      margin: 0px !important;
+
+  &__items {
+    list-style: none;
+    margin: 0;
+    padding: 0.375rem;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 4px;
     }
-    .cardContainer {
-      margin-bottom: 0px !important;
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
     }
-    .sidebar {
-      display: none;
+
+    &::-webkit-scrollbar-thumb {
+      background: $border;
+      border-radius: 2px;
     }
-    .filter_icon {
-      text-align: left;
-      font-size: 20px;
-      color: #c8232c;
+
+    .category-list--drawer & {
+      padding: 0;
+      max-height: none;
     }
-    .content {
-      width: 100%;
-      margin: 1rem auto;
+  }
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  font-weight: 500;
+  color: $text-secondary;
+  background: transparent;
+  border: none;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  text-align: left;
+  transition: all $transition-fast;
+  position: relative;
+
+  &:hover {
+    background: $background;
+    color: $text-primary;
+  }
+
+  &--active {
+    background: linear-gradient(
+      135deg,
+      rgba($brand-red, 0.1) 0%,
+      rgba($brand-blue-light, 0.08) 100%
+    );
+    color: $brand-red;
+    font-weight: 600;
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        rgba($brand-red, 0.15) 0%,
+        rgba($brand-blue-light, 0.1) 100%
+      );
+    }
+  }
+
+  &__text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__indicator {
+    width: 6px;
+    height: 6px;
+    background: $brand-red;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+// ============================================
+// CONTENT AREA
+// ============================================
+
+.proposal-content {
+  flex: 1;
+  min-width: 0;
+}
+
+// ============================================
+// RESULTS HEADER
+// ============================================
+
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid $border;
+
+  &__count {
+    font-size: 0.8125rem;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+// ============================================
+// PROPOSALS GRID
+// ============================================
+
+.proposals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// ============================================
+// LOADING STATE
+// ============================================
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+
+  &__spinner {
+    color: $brand-blue-light;
+    animation: spin 1s linear infinite;
+    margin-bottom: 0.75rem;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: $text-muted;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: $surface;
+  border: 1px dashed $border;
+  border-radius: $radius-lg;
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $background;
+    border-radius: 50%;
+    color: $text-muted;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 0.375rem;
+  }
+
+  &__message {
+    font-size: 0.875rem;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// ============================================
+// PAGINATION
+// ============================================
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 1.5rem;
+  padding: 0.75rem 0;
+
+  &__pages {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__btn {
+    min-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: $text-secondary;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition: all $transition-fast;
+
+    &:hover:not(:disabled) {
+      border-color: $brand-blue-light;
+      color: $brand-blue-light;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &--active {
+      background: linear-gradient(135deg, $brand-red 0%, $brand-red-dark 100%);
+      border-color: transparent;
+      color: $white;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        color: $white;
+        border-color: transparent;
+      }
+    }
+
+    &--nav {
+      background: transparent;
+      border-color: transparent;
+
+      &:hover:not(:disabled) {
+        background: $background;
+        border-color: transparent;
+      }
+    }
+  }
+
+  &__ellipsis {
+    padding: 0 0.25rem;
+    color: $text-muted;
+    font-size: 0.875rem;
+  }
+}
+
+// ============================================
+// BUTTONS
+// ============================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: $radius-md;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all $transition-base;
+
+  &--primary {
+    background: linear-gradient(135deg, $brand-red 0%, $brand-red-dark 100%);
+    color: $white;
+    box-shadow: 0 2px 8px rgba($brand-red, 0.3);
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba($brand-red, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--secondary {
+    background: $surface;
+    color: $brand-blue-light;
+    border: 2px solid $brand-blue-light;
+
+    &:hover {
+      background: $brand-blue-light;
+      color: $white;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE ADJUSTMENTS
+// ============================================
+
+@media (max-width: 640px) {
+  .proposal-page {
+    padding-bottom: 2rem;
+  }
+
+  .proposals-grid {
+    gap: 1rem;
+  }
+
+  .pagination {
+    &__btn {
+      min-width: 36px;
+      height: 36px;
+      font-size: 0.875rem;
     }
   }
 }

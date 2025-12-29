@@ -1,56 +1,699 @@
-.DraftPage {
-  padding: 4rem 0;
+// ============================================
+// DRAFTS PAGE - Document Management UI
+// ============================================
+
+// Brand Colors
+$brand-red: #ed1c24;
+$brand-red-dark: #c8232c;
+$brand-blue: #174f78;
+$brand-blue-light: #39a1dd;
+
+// Semantic Colors
+$white: #ffffff;
+$background: #f8fafc;
+$surface: #ffffff;
+$text-primary: #0f172a;
+$text-secondary: #475569;
+$text-muted: #94a3b8;
+$border: #e2e8f0;
+
+// Status Colors
+$success: #059669;
+$error: #dc2626;
+$danger-bg: #fef2f2;
+
+// Shadows
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+
+// Z-Index
+$z-toast: 1100;
+$z-modal-backdrop: 1000;
+$z-modal: 1001;
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+
+// Border Radius
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 18px;
+
+// ============================================
+// PAGE LAYOUT
+// ============================================
+
+.draft-page {
   min-height: 100vh;
+  padding: 2rem 1rem;
+  background: $background;
 
-  h2,
-  h3 {
-    text-align: center;
-    margin-bottom: 2rem;
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
+}
 
-  .draft-table {
-    margin-top: 2rem;
+// ============================================
+// AUTH REQUIRED
+// ============================================
 
-    .table-header {
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--foreground);
-    }
+.auth-required {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+  text-align: center;
 
-    .draft-actions {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-  }
-
-  .no-data-box {
-    margin-top: 3rem;
+  &__icon {
+    width: 80px;
+    height: 80px;
     display: flex;
+    align-items: center;
     justify-content: center;
+    background: linear-gradient(
+      135deg,
+      rgba($brand-blue-light, 0.1) 0%,
+      rgba($brand-red, 0.08) 100%
+    );
+    border-radius: 50%;
+    color: $brand-blue-light;
+    margin-bottom: 1.5rem;
+  }
 
-    .no-data-img {
-      max-width: 380px;
-      opacity: 0.8;
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+  }
+
+  &__message {
+    font-size: 1rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+  }
+}
+
+// ============================================
+// TOAST NOTIFICATION
+// ============================================
+
+.toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: $surface;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  z-index: $z-toast;
+  animation: slideIn 300ms ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &--success {
+    border-left: 4px solid $success;
+    color: $success;
+  }
+
+  &--error {
+    border-left: 4px solid $error;
+    color: $error;
+  }
+
+  &--loading {
+    border-left: 4px solid $brand-blue-light;
+    color: $brand-blue-light;
+  }
+
+  &__spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// PAGE HEADER
+// ============================================
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(
+    135deg,
+    $brand-blue 0%,
+    darken($brand-blue, 8%) 100%
+  );
+  border-radius: $radius-xl;
+  color: $white;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  // Red accent line
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $brand-red 0%, $brand-red-dark 100%);
+  }
+
+  // Decorative element
+  &::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -5%;
+    width: 150px;
+    height: 150px;
+    background: rgba($brand-blue-light, 0.15);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba($white, 0.15);
+    border-radius: $radius-md;
+    backdrop-filter: blur(8px);
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+  }
+
+  &__subtitle {
+    font-size: 0.9375rem;
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  &__count {
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem 1rem;
+    background: rgba($white, 0.15);
+    border-radius: $radius-md;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem;
+
+    &__count {
+      margin-top: 0.5rem;
     }
   }
 }
 
-/* Clean reusable class for destructive button */
-.danger-btn {
-  border-color: var(--primary) !important; // red
-  color: var(--primary) !important;
-  box-shadow: none;
+// ============================================
+// LOADING SKELETON
+// ============================================
+
+.drafts-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.draft-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(
+      90deg,
+      $border 25%,
+      lighten($border, 5%) 50%,
+      $border 75%
+    );
+    background-size: 200% 100%;
+    border-radius: $radius-md;
+    animation: shimmer 1.5s infinite;
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &__title {
+    width: 60%;
+    height: 18px;
+    background: linear-gradient(
+      90deg,
+      $border 25%,
+      lighten($border, 5%) 50%,
+      $border 75%
+    );
+    background-size: 200% 100%;
+    border-radius: $radius-sm;
+    margin-bottom: 0.5rem;
+    animation: shimmer 1.5s infinite;
+  }
+
+  &__subtitle {
+    width: 40%;
+    height: 14px;
+    background: linear-gradient(
+      90deg,
+      $border 25%,
+      lighten($border, 5%) 50%,
+      $border 75%
+    );
+    background-size: 200% 100%;
+    border-radius: $radius-sm;
+    animation: shimmer 1.5s infinite;
+  }
+
+  &__actions {
+    width: 150px;
+    height: 36px;
+    background: linear-gradient(
+      90deg,
+      $border 25%,
+      lighten($border, 5%) 50%,
+      $border 75%
+    );
+    background-size: 200% 100%;
+    border-radius: $radius-md;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// ============================================
+// EMPTY STATE
+// ============================================
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: $surface;
+  border: 1px dashed $border;
+  border-radius: $radius-xl;
+
+  &__image {
+    max-width: 250px;
+    width: 100%;
+    margin-bottom: 1.5rem;
+    opacity: 0.85;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.5rem;
+  }
+
+  &__message {
+    font-size: 0.9375rem;
+    color: $text-secondary;
+    margin: 0 0 1.5rem;
+    max-width: 400px;
+  }
+}
+
+// ============================================
+// DRAFTS LIST
+// ============================================
+
+.drafts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.draft-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  transition: all $transition-base;
 
   &:hover {
-    background: var(--primary) !important;
-    color: #fff !important;
+    border-color: rgba($brand-blue-light, 0.3);
+    box-shadow: $shadow-md;
+  }
+
+  &--deleting {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      rgba($brand-blue-light, 0.1) 0%,
+      rgba($brand-blue, 0.08) 100%
+    );
+    border-radius: $radius-md;
+    color: $brand-blue-light;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0 0 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__untitled {
+    font-style: italic;
+    color: $text-muted;
+    font-weight: 400;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: $text-muted;
+    margin: 0;
+
+    svg {
+      flex-shrink: 0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+
+    &__icon {
+      margin: 0 auto;
+    }
+
+    &__actions {
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
   }
 }
 
-/* Optional: container cleanup if needed later */
-.Main_row {
+// ============================================
+// MODAL
+// ============================================
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: $z-modal-backdrop;
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 200ms ease;
+}
+
+.modal {
+  background: $surface;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  z-index: $z-modal;
+  animation: modalEnter 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow: hidden;
+
+  &--small {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $border;
+
+    &--danger {
+      background: $danger-bg;
+      border-bottom-color: rgba($error, 0.15);
+      color: $error;
+    }
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0;
+    color: inherit;
+  }
+
+  &__body {
+    padding: 1.5rem;
+  }
+
+  &__message {
+    font-size: 0.9375rem;
+    color: $text-secondary;
+    line-height: 1.6;
+    margin: 0 0 0.5rem;
+
+    strong {
+      color: $text-primary;
+    }
+  }
+
+  &__warning {
+    font-size: 0.8125rem;
+    color: $text-muted;
+    margin: 0;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: $background;
+    border-top: 1px solid $border;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ============================================
+// BUTTONS
+// ============================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: $radius-md;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &__spinner {
+    animation: spin 1s linear infinite;
+  }
+
+  // Primary - Blue
+  &--primary {
+    background: linear-gradient(135deg, $brand-blue-light 0%, $brand-blue 100%);
+    color: $white;
+    box-shadow: 0 2px 6px rgba($brand-blue, 0.25);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 10px rgba($brand-blue, 0.35);
+      transform: translateY(-1px);
+    }
+  }
+
+  // Secondary - Blue Outline
+  &--secondary {
+    background: transparent;
+    color: $brand-blue-light;
+    border: 1.5px solid $brand-blue-light;
+
+    &:hover:not(:disabled) {
+      background: $brand-blue-light;
+      color: $white;
+    }
+  }
+
+  // Ghost
+  &--ghost {
+    background: transparent;
+    color: $text-secondary;
+    border: 1.5px solid $border;
+
+    &:hover:not(:disabled) {
+      background: $background;
+      color: $text-primary;
+    }
+  }
+
+  // Ghost Danger - Red (subtle)
+  &--ghost-danger {
+    background: transparent;
+    color: $brand-red;
+    border: 1.5px solid rgba($brand-red, 0.3);
+
+    &:hover:not(:disabled) {
+      background: $brand-red;
+      border-color: $brand-red;
+      color: $white;
+    }
+  }
+
+  // Danger - Red filled
+  &--danger {
+    background: $brand-red;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background: $brand-red-dark;
+    }
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: 480px) {
+  .draft-card__actions {
+    flex-direction: column;
+    width: 100%;
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .modal__footer {
+    flex-direction: column-reverse;
+
+    .btn {
+      width: 100%;
+    }
+  }
 }

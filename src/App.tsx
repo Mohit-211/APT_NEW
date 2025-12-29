@@ -23,6 +23,7 @@ import Profile from "@/features/dashboard/Profile";
 import Calculator from "@/features/calculators/pages/Calculator";
 
 // Calculators - Pages
+import APTSupplementProgram from "./features/calculators/APTSupplementProgram/APTSupplementProgram";
 import AdvancedPrice from "@/features/calculators/components/AdvancedPrice";
 import PriceCalculator from "@/features/calculators/components/PriceCalculator";
 import ProfitCalculator from "@/features/calculators/components/ProfitCalculator";
@@ -120,7 +121,14 @@ function AppContent() {
           {/* Dashboard */}
           <Route path="/profile-edit" element={<Profile />} />
           {/* Core Calculators */}
-
+          <Route
+            path="/calculator/hot-deals-calculator"
+            element={
+              <Calculator>
+                <APTSupplementProgram />
+              </Calculator>
+            }
+          />
           <Route
             path="/calculator/advanced-price-exhibit"
             element={

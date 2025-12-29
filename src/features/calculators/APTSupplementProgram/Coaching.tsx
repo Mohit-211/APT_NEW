@@ -1,54 +1,74 @@
-import React, { useState } from 'react';
+import { useState } from "react";
+import { Select, Typography, Space } from "antd";
 
-import { Form, Row } from 'react-bootstrap';
+// import "./Coaching.scss";
 
-const Coaching = () => {
-  const [experience_level, setExperience_level] = useState('');
-  const levelsData = {
-    'Beginner': { amount: "$75 - $100/hour" },
-    'Intermediate': { amount: "$150 - $200/hour" },
-    'Pro': { amount: "$200 - $250/hour" },
-    'Advanced Pro': { amount: "$500 - $750/hour" },
-  };
+const { Text, Title } = Typography;
 
-  
+type ExperienceLevel = "Beginner" | "Intermediate" | "Pro" | "Advanced Pro";
 
-  const amount = experience_level ? levelsData[experience_level]?.amount : '';
+type LevelData = {
+  amount: string;
+};
+
+const LEVELS_DATA: Record<ExperienceLevel, LevelData> = {
+  Beginner: { amount: "$75 - $100 / hour" },
+  Intermediate: { amount: "$150 - $200 / hour" },
+  Pro: { amount: "$200 - $250 / hour" },
+  "Advanced Pro": { amount: "$500 - $750 / hour" },
+};
+
+const EXPERIENCE_OPTIONS = Object.keys(LEVELS_DATA).map((level) => ({
+  label: level,
+  value: level,
+}));
+
+const Coaching: React.FC = () => {
+  const [experienceLevel, setExperienceLevel] =
+    useState<ExperienceLevel | null>(null);
+
+  const amount = experienceLevel ? LEVELS_DATA[experienceLevel].amount : "";
 
   return (
     <div className="Coaching">
-    
-        <h5>Coaching</h5>
-        <Row >
-          <Form.Group className='mb-2'>
-            <Form.Label>Question:</Form.Label>
-            <Form.Select >
-              <option value="">select question---</option>
-              <option value="How much should I charge a coaching client">How much should I charge a coaching client?</option>
-            </Form.Select>
-          </Form.Group>
-          <Form.Group className='mb-2' >
-            <Form.Label>Suggested fee is based on experience level: </Form.Label>
-            <Form.Select value={experience_level} onChange={(e) => setExperience_level(e.target.value)}>
-              <option value="">Select experience level</option>
-              {Object.keys(levelsData).map((level, index) => (
-                <option key={index} value={level}>
-                  {level}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-          <div className='Row_1'>
-            <div className='Col_1 blank_input'>
-              Fee Amount :
-              <div className='Col_12 blank_input'>
-                {amount}
-              </div>
-            </div>
-          </div>
-        </Row>
-      </div>
-   
+      <Title level={5}>Coaching</Title>
+
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        {/* Question */}
+        <div>
+          <Text strong>Question:</Text>
+          <Select
+            value="How much should I charge a coaching client?"
+            options={[
+              {
+                label: "How much should I charge a coaching client?",
+                value: "How much should I charge a coaching client?",
+              },
+            ]}
+            style={{ width: "100%", marginTop: 4 }}
+            disabled
+          />
+        </div>
+
+        {/* Experience Level */}
+        <div>
+          <Text strong>Suggested fee is based on experience level:</Text>
+          <Select
+            placeholder="Select experience level"
+            value={experienceLevel}
+            options={EXPERIENCE_OPTIONS}
+            onChange={(value) => setExperienceLevel(value as ExperienceLevel)}
+            style={{ width: "100%", marginTop: 4 }}
+          />
+        </div>
+
+        {/* Amount */}
+        <div className="Coaching__amount">
+          <Text strong>Fee Amount:</Text>
+          <div className="Coaching__amount-value">{amount || "--"}</div>
+        </div>
+      </Space>
+    </div>
   );
 };
 
