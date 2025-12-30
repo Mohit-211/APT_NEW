@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 
-/* ICON CASTING */
+/* ICONS */
 import {
   BsThreeDotsVertical as BsThreeRaw,
   BsPlus as BsPlusRaw,
@@ -12,9 +12,7 @@ import {
   BsArrowLeft as BsArrowLeftRaw,
 } from "react-icons/bs";
 
-const BsThreeDotsVertical = BsThreeRaw as React.FC<
-  React.SVGProps<SVGSVGElement>
->;
+const BsThreeDotsVertical = BsThreeRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsPlus = BsPlusRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsBuilding = BsBuildingRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsArrowLeft = BsArrowLeftRaw as React.FC<React.SVGProps<SVGSVGElement>>;
@@ -26,6 +24,8 @@ import BusinessModal from "./BusinessModal/BusinessModal";
 import { fetchAllConversations } from "@/app/store/slices/conversationSlice";
 import {
   DeleteConversationApi,
+  GetBusiness,
+  GetTemplates,
   PostconversationDetailOfAI,
 } from "@/utils/api/Api";
 
@@ -42,52 +42,43 @@ interface Business {
   type: string;
 }
 
+interface Template {
+  id: number;
+  name: string;
+}
+
 interface ChatSidebarProps {
   onSelectConversation: (conv: any) => void;
+  onClearTemplate?: () => void; // Optional: clear selected template
 }
 
 /* COMPONENT */
-const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
+const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClearTemplate }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    number | null
-  >(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletedId, setDeletedId] = useState<number | null>(null);
-  const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
   const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
-  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(
-    null
-  );
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [showDropdownId, setShowDropdownId] = useState<number | null>(null);
 
-  const [businesses, setBusinesses] = useState<Business[]>([
-    {
-      id: 1,
-      name: "Tech Solutions Inc",
-      location: "New York",
-      type: "Technology",
-    },
-    {
-      id: 2,
-      name: "Marketing Pro",
-      location: "Los Angeles",
-      type: "Marketing",
-    },
-  ]);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
-  const templates = [
-    {
-      id: 1,
-      name: "Standard Proposal",
-      description: "Basic proposal template",
-    },
-    { id: 2, name: "Executive Summary", description: "High-level overview" },
-    { id: 3, name: "Detailed Analysis", description: "In-depth proposal" },
-  ];
+  /* Fetch Businesses & Templates */
+  useEffect(() => {
+    GetBusiness()
+      .then((res) => setBusinesses(res?.data?.data || []))
+      .catch((e) => console.log("Error fetching businesses:", e));
 
+    GetTemplates()
+      .then((res) => setTemplates(res?.data?.data || []))
+      .catch((e) => console.log("Error fetching templates:", e));
+  }, []);
+
+  /* Fetch Conversations */
   const conversationState = useSelector(
     (state: any) => state?.rootReducer?.conversations || {}
   );
@@ -96,38 +87,20 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
     dispatch(fetchAllConversations() as any);
   }, [dispatch]);
 
+  /* Select Conversation */
   const handleConversationClick = async (item: ConversationItem) => {
     setSelectedConversationId(item.id);
     try {
-      const response = await PostconversationDetailOfAI({
-        conversation_id: item.id,
-      });
+      const response = await PostconversationDetailOfAI({ conversation_id: item.id });
       const data = response?.data?.data;
       onSelectConversation(data);
     } catch (err) {
       console.error("Error loading conversation details", err);
+      message.error("Failed to load conversation.");
     }
   };
 
-  const handleNewChatSubmit = (formData: any) => {
-    setIsNewChatModalOpen(false);
-    onSelectConversation({ formData, isNew: true });
-    setSelectedConversationId(null);
-    message.success("New chat initialized successfully!");
-  };
-
-  const handleBusinessSubmit = (formData: any) => {
-    const newBusiness: Business = {
-      id: businesses.length + 1,
-      name: formData.businessName,
-      location: formData.location,
-      type: formData.type,
-    };
-    setBusinesses([...businesses, newBusiness]);
-    setIsBusinessModalOpen(false);
-    message.success("Business added successfully!");
-  };
-
+  /* Delete Conversation */
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     setShowDropdownId(null);
@@ -149,19 +122,33 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
     }
   };
 
+  /* New Chat Click */
   const handleNewChatClick = () => {
     setSelectedConversationId(null);
+    setSelectedBusiness(null);
     onSelectConversation(null);
+    if (onClearTemplate) onClearTemplate(); // Clear selected template if callback provided
   };
 
+  /* Select Business */
   const handleBusinessSelect = (businessId: number) => {
     const business = businesses.find((b) => b.id === businessId) || null;
     setSelectedBusiness(business);
   };
 
-  const handleBackToHome = () => {
-    navigate("/");
+  const handleBusinessSubmit = (formData: any) => {
+    const newBusiness: Business = {
+      id: businesses.length + 1,
+      name: formData.businessName,
+      location: formData.location,
+      type: formData.type,
+    };
+    setBusinesses([...businesses, newBusiness]);
+    setIsBusinessModalOpen(false);
+    message.success("Business added successfully!");
   };
+
+  const handleBackToHome = () => navigate("/");
 
   return (
     <div className="chat-sidebar">
@@ -173,10 +160,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
 
       {/* CHAT SECTION */}
       <div className="sidebar-section chat-section">
-        <button
-          className="new-chat-button"
-          onClick={() => handleNewChatClick()}
-        >
+        <button className="new-chat-button" onClick={handleNewChatClick}>
           <BsPlus className="icon" />
           <span>New Chat</span>
         </button>
@@ -206,9 +190,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
                   className="menu-icon"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowDropdownId(
-                      showDropdownId === item.id ? null : item.id
-                    );
+                    setShowDropdownId(showDropdownId === item.id ? null : item.id);
                   }}
                 >
                   <BsThreeDotsVertical />
@@ -272,6 +254,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation }) => {
         </ul>
       </div>
 
+      {/* BUSINESS MODAL */}
       <BusinessModal
         isOpen={isBusinessModalOpen}
         onClose={() => setIsBusinessModalOpen(false)}

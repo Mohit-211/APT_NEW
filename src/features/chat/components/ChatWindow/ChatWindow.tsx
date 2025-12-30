@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { fetchAllConversations } from "@/app/store/slices/conversationSlice";
-import { ChatExpend, ChatShorte, ChatPayload } from "@/utils/api/Api";
 import ChatInput from "../ChatInput/ChatInput";
-import ChatMessage from "../ChatInput/ChatMessage";
-import ProposalForm from "./ProposalForm";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import "./ChatWindow.scss";
@@ -13,23 +10,22 @@ import { FaCircleInfo as FaCircleInfoRaw } from "react-icons/fa6";
 import { BsRobot as BsRobotRaw } from "react-icons/bs";
 import { FaRegCopy as FaRegCopyRaw } from "react-icons/fa";
 import { FaFileSignature as FaFileSignatureRaw } from "react-icons/fa";
-import { AiOutlineExpandAlt as AiExpandRaw } from "react-icons/ai";
+import { AiOutlineExpandAlt as AiExpandRaw, AiOutlineExpandAlt, AiOutlineShrink } from "react-icons/ai";
 import { AiOutlineShrink as AiShrinkRaw } from "react-icons/ai";
 import { BsX as BsXRaw } from "react-icons/bs";
 import { FaWandMagicSparkles as FaWandMagicSparklesRaw } from "react-icons/fa6";
+import { ChatExpend, ChatShorte } from "@/utils/api/Api";
+import { Spin } from "antd";
+import ProposalForm from "./ProposalForm";
 
 const FaCircleInfo = FaCircleInfoRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsRobot = BsRobotRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const FaRegCopy = FaRegCopyRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const FaFileSignature = FaFileSignatureRaw as React.FC<
-  React.SVGProps<SVGSVGElement>
->;
+const FaFileSignature = FaFileSignatureRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const AiExpand = AiExpandRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const AiShrink = AiShrinkRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsX = BsXRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const FaWandMagicSparkles = FaWandMagicSparklesRaw as React.FC<
-  React.SVGProps<SVGSVGElement>
->;
+const FaWandMagicSparkles = FaWandMagicSparklesRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 
 /* TYPES */
 export interface ChatMessage {
@@ -41,12 +37,14 @@ export interface ChatMessage {
 export interface Conversation {
   id?: string | number;
   title?: string;
+  template_id?: string;
+  business_id?: string;
   chats?: ChatMessage[];
 }
 
 interface ChatWindowProps {
   conversation: Conversation | null;
-  onNewConversation: (c: Conversation) => void;
+  onNewConversation?: (c: Conversation) => void;
   resetTrigger?: any;
 }
 
@@ -76,10 +74,9 @@ const useChatStream = (
   conversationTitle: string,
   setConversationTitle: (t: string) => void,
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  setCurrentConversation: React.Dispatch<
-    React.SetStateAction<Conversation | null>
-  >,
-  dispatch: any
+  setCurrentConversation: React.Dispatch<React.SetStateAction<Conversation | null>>,
+  dispatch: any,
+  onNewConversation?: (c: Conversation) => void
 ) => {
   const [loading, setLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -90,18 +87,25 @@ const useChatStream = (
   const streamMessage = async (messageData: MessageData) => {
     const token = localStorage.getItem("UserLoginTokenApt");
     const text = messageData.text;
-
     if (!token || !text.trim()) return;
 
     const isNew = currentConversation?.id ? 0 : 1;
     const titleToUse = conversationTitle || text;
+
+    const template_id = currentConversation?.template_id || messageData?.template_id;
+    const business_id = currentConversation?.business_id || messageData?.business_id;
+
     if (!conversationTitle) setConversationTitle(text);
+
+    // Unique IDs for React rendering
+    const userId = crypto.randomUUID();
+    const botId = crypto.randomUUID();
 
     // Add user message and empty bot message
     setMessages((prev) => [
       ...prev,
-      { id: Date.now(), query: text, message: null },
-      { id: Date.now() + 1, query: null, message: "" },
+      { id: userId, query: text, message: null },
+      { id: botId, query: null, message: "" },
     ]);
 
     setLoading(true);
@@ -121,14 +125,16 @@ const useChatStream = (
             conversation_id: currentConversation?.id || "",
             query: text,
             conversation_title: titleToUse,
-            template_id: messageData?.template_id,
-            business_id: messageData?.business_id,
+            template_id,
+            business_id,
             auto_price: messageData?.auto_price,
           }),
         }
       );
 
-      const reader = response.body?.getReader();
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
@@ -141,16 +147,8 @@ const useChatStream = (
       }
 
       while (true) {
-        const { done, value } = await reader!.read();
-        if (done) {
-          setLoading(false);
-          setIsStreaming(false);
-          if (typingInterval.current) {
-            clearInterval(typingInterval.current);
-            typingInterval.current = null;
-          }
-          break;
-        }
+        const { done, value } = await reader.read();
+        if (done) break;
 
         const decoded = decoder.decode(value, { stream: true });
         buffer += decoded;
@@ -162,7 +160,6 @@ const useChatStream = (
 
           if (fullChunk.startsWith("data:")) {
             const chunk = fullChunk.replace(/^data:\s*/, "");
-
             if (chunk === "[DONE]") {
               setLoading(false);
               setIsStreaming(false);
@@ -170,15 +167,12 @@ const useChatStream = (
                 clearInterval(typingInterval.current);
                 typingInterval.current = null;
               }
-              if (isNew === 1) {
-                dispatch(fetchAllConversations());
-              }
+              if (isNew === 1) dispatch(fetchAllConversations());
               return;
             }
 
             try {
               const json = JSON.parse(chunk);
-
               if (json.type === "final") {
                 setMessages((prev) => {
                   const updated = [...prev];
@@ -189,6 +183,7 @@ const useChatStream = (
                   return updated;
                 });
                 setCurrentConversation(json?.token);
+                if (onNewConversation && isNew === 1) onNewConversation(json?.token);
                 if (typingInterval.current) {
                   clearInterval(typingInterval.current);
                   typingInterval.current = null;
@@ -245,22 +240,16 @@ const useChatStream = (
 const ChatWindow: React.FC<ChatWindowProps> = ({
   conversation,
   resetTrigger,
+  onNewConversation,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>(
-    conversation?.chats || []
+  const [messages, setMessages] = useState<ChatMessage[]>(conversation?.chats || []);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(
+    conversation
   );
-  const [currentConversation, setCurrentConversation] =
-    useState<Conversation | null>(conversation);
-  const [conversationTitle, setConversationTitle] = useState(
-    conversation?.title || ""
-  );
+  const [conversationTitle, setConversationTitle] = useState(conversation?.title || "");
   const [proposalModalOpen, setProposalModalOpen] = useState(false);
-  const [expandLoading, setExpandLoading] = useState<Record<number, boolean>>(
-    {}
-  );
-  const [expandState, setExpandState] = useState<
-    Record<number, "expand" | "shorten" | null>
-  >({});
+  const [expandLoading, setExpandLoading] = useState<Record<number, boolean>>({});
+  const [expandState, setExpandState] = useState<Record<number, "expand" | "shorten" | null>>({});
   const [showTooltip, setShowTooltip] = useState(false);
 
   const dispatch = useDispatch();
@@ -274,7 +263,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     setConversationTitle,
     setMessages,
     setCurrentConversation,
-    dispatch
+    dispatch,
+    onNewConversation
   );
 
   useEffect(() => {
@@ -289,13 +279,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   }, [messages, loading, isStreaming]);
 
   /* Proposal Navigation */
-  const handleGenerateProposal = () => {
-    setProposalModalOpen(true);
-  };
-
+  const handleGenerateProposal = () => setProposalModalOpen(true);
   const submitProposal = (proposalData: any) => {
-    setProposalModalOpen(false);
+    console.log(proposalData, "proposalData==>>")
+    console.log("hello")
     navigate("/proposal-editor", { state: proposalData });
+    setProposalModalOpen(false);
   };
 
   /* Copy Message */
@@ -303,52 +292,46 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = htmlString;
     const plainText = tempDiv.textContent || tempDiv.innerText || "";
-    navigator.clipboard.writeText(plainText).then(() => {
-      showToast("Copied to clipboard!", "success");
-    });
+    navigator.clipboard.writeText(plainText).then(() => showToast("Copied to clipboard!", "success"));
   };
 
-  /* Expand / Shorten */
-  const expandOrShorten = async (
-    idx: number,
-    content: string,
-    type: "expand" | "shorten"
-  ) => {
-    const chat_id = currentConversation?.chats?.[0]?.id;
-    // const payload = { previousProposal: content, chat_id };
+  
+  const [expandStates, setExpandStates] = useState({});
 
-    setExpandLoading((prev) => ({ ...prev, [idx]: true }));
+  const handleExpandShorten = async (msgIndex, content, type) => {
+    console.log(msgIndex, content, type, "msgIndex, content, type")
+    const chat_id = currentConversation?.chats[0]?.id;
+    const payload = { previousProposal: content, chat_id };
+    setExpandLoading((prev) => ({ ...prev, [msgIndex]: true }));
 
     try {
-      // let updated = "";
-      // if (type === "expand") {
-      //   const res = await ChatExpend(payload);
-      //   updated = res?.data?.data;
-      // } else {
-      //   const res = await ChatShorte(payload);
-      //   updated = res?.data?.data;
-      // }
-      // if (updated) {
-      //   setMessages((prev) =>
-      //     prev.map((msg, i) => (i === idx ? { ...msg, message: updated } : msg))
-      //   );
-      //   setExpandState((prev) => ({
-      //     ...prev,
-      //     [idx]: type,
-      //   }));
-      //   showToast(
-      //     `${type === "expand" ? "Expanded" : "Shortened"} successfully`,
-      //     "success"
-      //   );
-      // }
+      let updated = "";
+      if (type === "expand") {
+        const res = await ChatExpend(payload);
+        updated = res?.data?.data;
+      } else {
+        const res = await ChatShorte(payload);
+        updated = res?.data?.data;
+      }
+
+      if (updated) {
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === msgIndex ? { ...msg, message: updated } : msg
+          )
+        );
+        setExpandStates((prev) => ({ ...prev, [msgIndex]: type }));
+        message.success(
+          `${type === "expand" ? "Expanded" : "Shortened"} successfully.`
+        );
+      }
     } catch (err) {
-      showToast(`Failed to ${type} text`, "error");
       console.error(err);
+      message.error(`Failed to ${type}`);
     } finally {
-      setExpandLoading((prev) => ({ ...prev, [idx]: false }));
+      setExpandLoading((prev) => ({ ...prev, [msgIndex]: false }));
     }
   };
-
   return (
     <div className="chat-window">
       {/* HEADER */}
@@ -361,9 +344,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           >
             <FaCircleInfo />
           </div>
-          <h2 className="conversation-title">
-            {conversationTitle || "New Chat"}
-          </h2>
+          <h2 className="conversation-title">{conversationTitle || "New Chat"}</h2>
         </div>
 
         {/* Tooltip */}
@@ -378,107 +359,70 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             </div>
             <div className="tooltip-example">
               <strong>Example:</strong>
-              <p>
-                "Create a proposal for a Financial Literacy workshop for 100
-                participants in Mumbai."
-              </p>
+              <p>"Create a proposal for a Financial Literacy workshop for 100 participants in Mumbai."</p>
             </div>
-            <div className="tooltip-tag">
-              Accurate • Efficient • Professional
-            </div>
+            <div className="tooltip-tag">Accurate • Efficient • Professional</div>
           </div>
         )}
       </div>
 
       {/* MESSAGES */}
       <div className="chat-messages" ref={chatContainerRef}>
-        {/* Empty State */}
         {messages.length === 0 && !loading && (
           <div className="empty-state">
             <div className="empty-icon">
               <BsRobot />
             </div>
             <h3>Start a conversation with Ceddie</h3>
-            <p>
-              Ask me anything about creating proposals, pricing, or project
-              details
-            </p>
+            <p>Ask me anything about creating proposals, pricing, or project details</p>
           </div>
         )}
 
-        {/* Messages */}
         {messages.map((msg, i) => (
           <div key={msg.id} className="message-group">
-            {/* User Message */}
-            {msg.query && (
-              <div className="chat-bubble user">
-                <div className="message-content">{msg.query}</div>
-              </div>
-            )}
-
-            {/* Bot Message */}
+            {msg.query && <div className="chat-bubble user"><div className="message-content">{msg.query}</div></div>}
             {msg.message !== null && (
               <div className="chat-bubble bot">
-                <div className="bot-avatar">
-                  <FaWandMagicSparkles />
-                </div>
+                <div className="bot-avatar"><FaWandMagicSparkles /></div>
                 <div className="bot-message-wrapper">
                   <div className="message-content">
-                    <span
-                      dangerouslySetInnerHTML={{ __html: msg.message || "" }}
-                    />
-                    {i === messages.length - 1 && isStreaming && (
-                      <span className="typing-cursor">▌</span>
-                    )}
+                    <span dangerouslySetInnerHTML={{ __html: msg.message || "" }} />
+                    {i === messages.length - 1 && isStreaming && <span className="typing-cursor">▌</span>}
                   </div>
 
-                  {/* Action Buttons */}
                   {msg.message && (
                     <div className="message-actions">
-                      <button
-                        className="action-button"
-                        onClick={() => handleCopy(msg.message!)}
-                        title="Copy to Clipboard"
-                      >
-                        <FaRegCopy />
-                        <span>Copy</span>
+                      <button className="action-button" onClick={() => handleCopy(msg.message!)} title="Copy to Clipboard">
+                        <FaRegCopy /><span>Copy</span>
+                      </button>
+
+                      <button className="action-button" onClick={handleGenerateProposal} title="Generate Proposal">
+                        <FaFileSignature /><span>Proposal</span>
                       </button>
 
                       <button
                         className="action-button"
-                        onClick={handleGenerateProposal}
-                        title="Generate Proposal"
-                      >
-                        <FaFileSignature />
-                        <span>Proposal</span>
-                      </button>
-
-                      <button
-                        className="action-button"
-                        disabled={expandLoading[i]}
                         onClick={() =>
-                          expandOrShorten(
+                          handleExpandShorten(
                             i,
-                            msg.message!,
-                            expandState[i] === "expand" ? "shorten" : "expand"
+                            msg.message,
+                            expandStates[i] === "expand"
+                              ? "shorten"
+                              : "expand"
                           )
                         }
-                        title={
-                          expandState[i] === "expand"
-                            ? "Shorten text"
-                            : "Expand text"
-                        }
+                        disabled={expandLoading[i]}
                       >
                         {expandLoading[i] ? (
-                          <div className="btn-spinner" />
-                        ) : expandState[i] === "expand" ? (
+                          <Spin size="small" />
+                        ) : expandStates[i] === "expand" ? (
                           <>
-                            <AiShrink />
+                            <AiOutlineShrink />
                             <span>Shorten</span>
                           </>
                         ) : (
                           <>
-                            <AiExpand />
+                            <AiOutlineExpandAlt />
                             <span>Expand</span>
                           </>
                         )}
@@ -491,20 +435,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           </div>
         ))}
 
-        {/* Loading State */}
         {loading && !isStreaming && (
           <div className="chat-bubble bot">
-            <div className="bot-avatar">
-              <FaWandMagicSparkles className="pulse-icon" />
-            </div>
+            <div className="bot-avatar"><FaWandMagicSparkles className="pulse-icon" /></div>
             <div className="bot-message-wrapper">
               <div className="message-content loading">
                 <span className="loading-text">Ceddie is thinking</span>
-                <span className="loading-dots">
-                  <span>.</span>
-                  <span>.</span>
-                  <span>.</span>
-                </span>
+                <span className="loading-dots"><span>.</span><span>.</span><span>.</span></span>
               </div>
             </div>
           </div>
@@ -517,33 +454,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       <ChatInput
         onSendMessage={streamMessage}
         resetTrigger={resetTrigger}
-        onTemplateSelect={() => {}}
+        onTemplateSelect={() => { }}
+        currentConversation={currentConversation}
       />
 
       {/* PROPOSAL MODAL */}
       {proposalModalOpen && (
-        <div
-          className="modal-overlay"
-          onClick={() => setProposalModalOpen(false)}
-        >
+        <div className="modal-overlay" onClick={() => setProposalModalOpen(false)}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h2>Generate Proposal</h2>
                 <p>Configure your proposal details</p>
               </div>
-              <button
-                className="modal-close"
-                onClick={() => setProposalModalOpen(false)}
-              >
+              <button className="modal-close" onClick={() => setProposalModalOpen(false)}>
                 <BsX />
               </button>
             </div>
             <div className="modal-body">
-              {/* <ProposalForm
-                selectedProposal={currentConversation}
-                onSubmit={submitProposal}
-              /> */}
+              <ProposalForm selectedProposal={currentConversation} onSubmit={submitProposal} />
             </div>
           </div>
         </div>

@@ -222,3 +222,12 @@ export const ChatShorte = (payload: ChatPayload) =>
 
 export const ChateProposalEdited = (payload: ChatPayload) =>
   axiosInstance.post("aichat/conversations/chats/message/update", payload);
+
+export const GetBusiness = async () => {
+  return await axiosInstance.get("business");
+}
+
+
+export const GetTemplates = async () => {
+  return await axiosInstance.get("templates");
+}

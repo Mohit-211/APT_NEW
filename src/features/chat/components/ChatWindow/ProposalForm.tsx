@@ -1,34 +1,43 @@
 import React from "react";
 import { Form, Input, Button } from "antd";
 
-interface ProposalFormProps {
-  onSubmit: (data: any) => void;
-  selectedProposal: {
-    id?: string | number;
-    chats?: {
-      id: string;
-      sender: "user" | "bot";
-      text: string | null;
-    }[];
-  } | null;
+/* =========================
+   TYPES
+========================= */
+interface Chat {
+  id: string;
+  message: string | null;
+  conversation_id?: string;
 }
 
+interface SelectedProposal {
+  id?: string | number;
+  chats?: Chat[];
+}
+
+interface ProposalFormProps {
+  selectedProposal: SelectedProposal | null;
+  onSubmit: (data: any) => void;
+}
+
+/* =========================
+   COMPONENT
+========================= */
 const ProposalForm: React.FC<ProposalFormProps> = ({
-  onSubmit,
   selectedProposal,
+  onSubmit,
 }) => {
   const [form] = Form.useForm();
 
-  // Pick the LAST bot message (correct for new ChatWindow)
-  const lastBotMessage = selectedProposal?.chats
-    ?.filter((m) => m.sender === "bot")
-    ?.pop();
-
-  const handleSubmit = (values: any) => {
+  const handleSubmit = (values: {
+    preparedByName: string;
+    preparedByOrg: string;
+    preparedByContact: string;
+  }) => {
     const proposalData = {
-      proposalContent: lastBotMessage?.text || "",
-      conversation_id: selectedProposal?.id || "",
-      message_id: lastBotMessage?.id || "",
+      proposalContent: selectedProposal?.chats?.[0]?.message,
+      conversation_id: selectedProposal?.chats?.[0]?.conversation_id,
+      message_id: selectedProposal?.chats?.[0]?.id,
       preparedBy: {
         name: values.preparedByName,
         org: values.preparedByOrg,

@@ -55,6 +55,7 @@ $radius-xl: 18px;
 // AUTH REQUIRED STATE
 // ============================================
 
+
 .auth-required {
   display: flex;
   flex-direction: column;
@@ -70,11 +71,9 @@ $radius-xl: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(
-      135deg,
-      rgba($brand-red, 0.1) 0%,
-      rgba($brand-blue-light, 0.1) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba($brand-red, 0.1) 0%,
+        rgba($brand-blue-light, 0.1) 100%);
     border-radius: 50%;
     color: $brand-red;
     margin-bottom: 1.5rem;
@@ -197,6 +196,7 @@ $radius-xl: 18px;
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -206,6 +206,7 @@ $radius-xl: 18px;
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -350,20 +351,16 @@ $radius-xl: 18px;
   }
 
   &--active {
-    background: linear-gradient(
-      135deg,
-      rgba($brand-red, 0.1) 0%,
-      rgba($brand-blue-light, 0.08) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba($brand-red, 0.1) 0%,
+        rgba($brand-blue-light, 0.08) 100%);
     color: $brand-red;
     font-weight: 600;
 
     &:hover {
-      background: linear-gradient(
-        135deg,
-        rgba($brand-red, 0.15) 0%,
-        rgba($brand-blue-light, 0.1) 100%
-      );
+      background: linear-gradient(135deg,
+          rgba($brand-red, 0.15) 0%,
+          rgba($brand-blue-light, 0.1) 100%);
     }
   }
 
@@ -459,6 +456,7 @@ $radius-xl: 18px;
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

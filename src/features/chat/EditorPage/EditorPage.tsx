@@ -10,26 +10,30 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChateProposalEdited } from "@/utils/api/Api";
 import { useReactToPrint } from "react-to-print";
-
+import html2pdf from "html2pdf.js";
 import "./EditorPage.scss";
+
+interface PreparedBy {
+  name?: string;
+  org?: string;
+  contact?: string;
+}
 
 interface ProposalData {
   proposalContent?: string;
   conversation_id?: string;
   message_id?: string;
-  preparedBy?: {
-    name?: string;
-    org?: string;
-    contact?: string;
-  };
+  preparedBy?: PreparedBy;
 }
 
 const CKEditorPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const proposalData: ProposalData = location.state || {};
-
+  console.log(location,"===>>")
+   const proposalData = (location.state as ProposalData) || {};
   const { proposalContent, conversation_id, message_id } = proposalData;
+
+  // const { proposalContent, conversation_id, message_id } = proposalData;
 
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
@@ -47,10 +51,17 @@ const CKEditorPage: React.FC = () => {
     }
   }, [proposalContent, navigate]);
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: "proposal",
-  } as any);
+  const handleDownloadPDF = async () => {
+    const element = printRef.current;
+    const options = {
+      margin: [15, 15, 25, 15],
+      filename: "proposal.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, letterRendering: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+    return html2pdf().set(options).from(element).save();
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -145,7 +156,7 @@ const CKEditorPage: React.FC = () => {
 
             <Button
               icon={<DownloadOutlined />}
-              onClick={handlePrint}
+              onClick={handleDownloadPDF}
               className="button_theme"
               disabled={saving}
             >
