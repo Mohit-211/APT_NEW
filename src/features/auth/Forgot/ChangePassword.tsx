@@ -1,41 +1,65 @@
 // ChangePassword.tsx
 import { useState } from "react";
 import { Form, Input, Button, message, Modal } from "antd";
-import { ForgotPassword } from "@/utils/api/Api";
 import OTPInput from "react-otp-input";
+
+import { ForgotPassword } from "@/utils/api/Api";
+
 import "./Forgot.scss";
 
-interface Props {
+// -------------------- TYPES --------------------
+
+interface ChangePasswordProps {
   email: string;
   onSuccess: () => void;
 }
 
-export default function ChangePassword({ email, onSuccess }: Props) {
-  const [loading, setLoading] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [form] = Form.useForm();
+interface FormValues {
+  password: string;
+  confirm: string;
+}
 
-  const onFinish = async (values: { password: string; confirm: string }) => {
+// -------------------- COMPONENT --------------------
+
+export default function ChangePassword({
+  email,
+  onSuccess,
+}: ChangePasswordProps) {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>("");
+
+  const [form] = Form.useForm<FormValues>();
+
+  // -------------------- SUBMIT HANDLER --------------------
+
+  const onFinish = async (values: FormValues) => {
     if (otp.length !== 4) {
-      return message.error("Please enter a valid 4-digit OTP.");
+      message.error("Please enter a valid 4-digit OTP.");
+      return;
     }
+
     if (values.password !== values.confirm) {
-      return message.error("Passwords do not match.");
+      message.error("Passwords do not match.");
+      return;
     }
 
     try {
       setLoading(true);
+
       const res = await ForgotPassword(
-        email,
-        parseInt(otp, 10),
+        email, // string
+        otp, // ✅ OTP MUST BE STRING
         values.password,
         values.confirm
       );
+
       Modal.success({
-        title: "Password reset",
+        title: "Password Reset Successful",
         content:
-          res?.data?.message || "Your password has been reset successfully.",
+          res?.data?.message ||
+          "Your password has been reset successfully.",
       });
+
       onSuccess();
     } catch (err: any) {
       message.error(
@@ -46,49 +70,59 @@ export default function ChangePassword({ email, onSuccess }: Props) {
     }
   };
 
+  // -------------------- UI --------------------
+
   return (
     <div className="change-password">
-      <Form
+      <Form<FormValues>
         layout="vertical"
         form={form}
         onFinish={onFinish}
         requiredMark={false}
       >
+        {/* Email */}
         <Form.Item label="Email">
-          <Input value={email} disabled />
+          <Input value={email} disabled size="large" />
         </Form.Item>
 
+        {/* OTP */}
         <Form.Item label="Enter OTP" required>
           <OTPInput
             value={otp}
-            onChange={(val: string) => setOtp(val)}
+            onChange={(value: string) => setOtp(value)}
             numInputs={4}
+            shouldAutoFocus
+            inputType="tel"
             renderInput={(props) => <input {...props} />}
             inputStyle={{
               width: "3rem",
               height: "3rem",
               fontSize: "1.2rem",
-              borderRadius: 8,
+              borderRadius: "8px",
               border: "2px solid var(--accent)",
               background: "#f7f9fc",
               margin: "0 0.4rem",
+              textAlign: "center",
             }}
-            renderSeparator={<span />}
           />
         </Form.Item>
 
+        {/* New Password */}
         <Form.Item
           name="password"
-          label="New password"
-          rules={[{ required: true, message: "Please enter a new password." }]}
+          label="New Password"
+          rules={[
+            { required: true, message: "Please enter a new password." },
+          ]}
           hasFeedback
         >
           <Input.Password placeholder="New password" size="large" />
         </Form.Item>
 
+        {/* Confirm Password */}
         <Form.Item
           name="confirm"
-          label="Confirm password"
+          label="Confirm Password"
           dependencies={["password"]}
           hasFeedback
           rules={[
@@ -98,7 +132,9 @@ export default function ChangePassword({ email, onSuccess }: Props) {
                 if (!value || getFieldValue("password") === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(new Error("Passwords do not match."));
+                return Promise.reject(
+                  new Error("Passwords do not match.")
+                );
               },
             }),
           ]}
@@ -106,6 +142,7 @@ export default function ChangePassword({ email, onSuccess }: Props) {
           <Input.Password placeholder="Confirm password" size="large" />
         </Form.Item>
 
+        {/* Submit */}
         <Form.Item>
           <Button
             type="primary"

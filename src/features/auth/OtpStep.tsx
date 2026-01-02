@@ -11,22 +11,33 @@ import "./OtpStep.scss";
 
 const { Title, Paragraph } = Typography;
 
+// -------------------- TYPES --------------------
+
+export interface OtpFormData {
+  email: string;
+  otp: string;
+}
+
+// -------------------- COMPONENT --------------------
+
 export default function OtpStep() {
   const steps = ["Send OTP", "Verify OTP", "Create Account"];
 
-  const [activeStep, setActiveStep] = useState(0);
-  const [completed, setCompleted] = useState<{ [key: number]: boolean }>({});
-  const [formData, setFormData] = useState({
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [completed, setCompleted] = useState<Record<number, boolean>>({});
+  const [formData, setFormData] = useState<OtpFormData>({
     email: "",
     otp: "",
   });
 
   const totalSteps = steps.length;
+
   const completedSteps = () => Object.keys(completed).length;
   const isLastStep = () => activeStep === totalSteps - 1;
   const allStepsCompleted = () => completedSteps() === totalSteps;
 
-  // Equivalent next-step logic from original file
+  // -------------------- STEP NAVIGATION --------------------
+
   const handleNext = () => {
     const nextStep =
       isLastStep() && !allStepsCompleted()
@@ -36,16 +47,17 @@ export default function OtpStep() {
     setActiveStep(nextStep);
   };
 
-  // Equivalent send OTP logic
+  // -------------------- SEND OTP --------------------
+
   const handleSendOTP = async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      return message.error(
-        "Invalid email. Please enter a valid email address."
-      );
+      message.error("Invalid email. Please enter a valid email address.");
+      return;
     }
 
     try {
       await SendOTPAPI(formData.email);
+
       Modal.success({
         title: "OTP Sent",
         content: "OTP has been sent to your email.",
@@ -60,10 +72,12 @@ export default function OtpStep() {
     }
   };
 
-  // Equivalent verify OTP logic
+  // -------------------- VERIFY OTP --------------------
+
   const handleVerifyOTP = async () => {
     if (formData.otp.length !== 4) {
-      return message.error("Please enter a valid 4-digit OTP.");
+      message.error("Please enter a valid 4-digit OTP.");
+      return;
     }
 
     try {
@@ -83,9 +97,10 @@ export default function OtpStep() {
     }
   };
 
-  // Equivalent dynamic button selection (Send OTP / Verify OTP)
+  // -------------------- ACTION BUTTON --------------------
+
   const renderActionButton = () => {
-    if (completedSteps() === totalSteps - 3) {
+    if (completedSteps() === 0) {
       return (
         <button
           className="otp-btn"
@@ -97,7 +112,7 @@ export default function OtpStep() {
       );
     }
 
-    if (completedSteps() === totalSteps - 2) {
+    if (completedSteps() === 1) {
       return (
         <button
           className="otp-btn"
@@ -112,9 +127,11 @@ export default function OtpStep() {
     return null;
   };
 
+  // -------------------- UI --------------------
+
   return (
     <div className="otp-step-page">
-      <Card className="otp-card" bordered={false}>
+      <Card className="otp-card">
         <Title level={3} className="otp-title">
           Signup
         </Title>
@@ -139,7 +156,8 @@ export default function OtpStep() {
           )}
 
           {activeStep === 2 && (
-            <CreateAccount formData={formData} setFormData={setFormData} />
+            <CreateAccount formData={formData} />
+            
           )}
         </div>
 

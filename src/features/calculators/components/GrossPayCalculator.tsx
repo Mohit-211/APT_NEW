@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Input, message } from "antd";
-
 import { CalculatorViewApi } from "@/utils/api/Api";
 
 type GrossPayProps = {
@@ -12,24 +11,33 @@ type GrossPayProps = {
 };
 
 const GrossPayCalculator: React.FC<GrossPayProps> = ({ calculatordetails }) => {
-  const [hourlyCost, setHourlyCost] = useState<number | undefined>();
-  const [numberOfDays, setNumberOfDays] = useState<number | undefined>();
-  const [hoursPerDay, setHoursPerDay] = useState<number | undefined>();
+  const [hourlyCost, setHourlyCost] = useState<number>(0);
+  const [numberOfDays, setNumberOfDays] = useState<number>(0);
+  const [hoursPerDay, setHoursPerDay] = useState<number>(0);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0 }); // TS safe
+    window.scrollTo({ top: 0, left: 0 });
   }, []);
 
   const handleView = async () => {
+    if (!calculatordetails?.calculatordetails?.id) return;
+
     try {
-      await CalculatorViewApi(calculatordetails?.calculatordetails?.id);
+      await CalculatorViewApi(String(calculatordetails.calculatordetails.id));
     } catch (err) {
-      console.log(err);
+      console.error(err);
       message.error("Unable to record calculator view.");
     }
   };
 
-  const total = (hourlyCost || 0) * (numberOfDays || 0) * (hoursPerDay || 0);
+  const handleChange =
+    (setter: React.Dispatch<React.SetStateAction<number>>) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setter(value ? Number(value) : 0);
+    };
+
+  const total = hourlyCost * numberOfDays * hoursPerDay;
 
   return (
     <div className="GrossPayCalculator">
@@ -41,7 +49,7 @@ const GrossPayCalculator: React.FC<GrossPayProps> = ({ calculatordetails }) => {
               placeholder="Enter value"
               type="number"
               value={hourlyCost}
-              onChange={(e) => setHourlyCost(Number(e.target.value))}
+              onChange={handleChange(setHourlyCost)}
               onClick={handleView}
             />
           </div>
@@ -56,7 +64,7 @@ const GrossPayCalculator: React.FC<GrossPayProps> = ({ calculatordetails }) => {
               placeholder="Enter value"
               type="number"
               value={numberOfDays}
-              onChange={(e) => setNumberOfDays(Number(e.target.value))}
+              onChange={handleChange(setNumberOfDays)}
             />
           </div>
         </div>
@@ -70,7 +78,7 @@ const GrossPayCalculator: React.FC<GrossPayProps> = ({ calculatordetails }) => {
               placeholder="Enter value"
               type="number"
               value={hoursPerDay}
-              onChange={(e) => setHoursPerDay(Number(e.target.value))}
+              onChange={handleChange(setHoursPerDay)}
             />
           </div>
         </div>
@@ -78,7 +86,7 @@ const GrossPayCalculator: React.FC<GrossPayProps> = ({ calculatordetails }) => {
 
       <div className="Row_1">
         <div className="Col_1 blank_input">
-          Total Amount :
+          Total Amount:
           <div className="Col_12">
             <div className="blank_input">${total.toFixed(2)}</div>
           </div>

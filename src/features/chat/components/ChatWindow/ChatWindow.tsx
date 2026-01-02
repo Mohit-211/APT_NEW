@@ -10,30 +10,36 @@ import { FaCircleInfo as FaCircleInfoRaw } from "react-icons/fa6";
 import { BsRobot as BsRobotRaw } from "react-icons/bs";
 import { FaRegCopy as FaRegCopyRaw } from "react-icons/fa";
 import { FaFileSignature as FaFileSignatureRaw } from "react-icons/fa";
-import { AiOutlineExpandAlt as AiExpandRaw, AiOutlineExpandAlt, AiOutlineShrink } from "react-icons/ai";
-import { AiOutlineShrink as AiShrinkRaw } from "react-icons/ai";
+// import { AiOutlineExpandAlt as AiExpandRaw, AiOutlineExpandAlt, AiOutlineShrink } from "react-icons/ai";
+import { AiOutlineExpandAlt, AiOutlineShrink } from "react-icons/ai";
+
+// import { AiOutlineShrink as AiShrinkRaw } from "react-icons/ai";
 import { BsX as BsXRaw } from "react-icons/bs";
 import { FaWandMagicSparkles as FaWandMagicSparklesRaw } from "react-icons/fa6";
-import { ChatExpend, ChatShorte } from "@/utils/api/Api";
-import { Spin } from "antd";
+import { ChatExpend, ChatPayload, ChatShorte } from "@/utils/api/Api";
+import { message, Spin } from "antd";
 import ProposalForm from "./ProposalForm";
 
 const FaCircleInfo = FaCircleInfoRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsRobot = BsRobotRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const FaRegCopy = FaRegCopyRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const FaFileSignature = FaFileSignatureRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const AiExpand = AiExpandRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const AiShrink = AiShrinkRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsX = BsXRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const FaWandMagicSparkles = FaWandMagicSparklesRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 
-/* TYPES */
-export interface ChatMessage {
-  id: string | number;
-  query?: string | null;
-  message?: string | null;
-}
+// /* TYPES */
+// export interface ChatMessage {
+//   id: string | number;
+//   query?: string | null;
+//   message?: string | null;
+// }
+type Nullable<T> = T | null;
 
+interface ChatMessage {
+  id: string | number;
+  message?: Nullable<string>;
+  query?: Nullable<string>;
+}
 export interface Conversation {
   id?: string | number;
   title?: string;
@@ -48,12 +54,40 @@ interface ChatWindowProps {
   resetTrigger?: any;
 }
 
-interface MessageData {
-  text: string;
+export interface Chat {
+  id: string;
+  message: string | null;
+  prompt?: string;
+  [key: string]: any;
+}
+
+export interface SelectedProposal {
+  id: string | number;
+  title?: string;
   template_id?: string;
   business_id?: string;
-  auto_price?: boolean;
+  chats?: Chat[];
 }
+
+
+
+
+interface MessageData {
+  text: string;
+  template_id: string;   // API expects string
+  business_id: string;   // API expects string
+  auto_price: boolean;
+  manual_price?: string;
+}
+
+interface SendMessageInput {
+  text: string;
+  template_id: string;
+  business_id: string;
+  auto_price: boolean;
+  manual_price?: string;
+}
+
 
 /* CUSTOM TOAST */
 const showToast = (message: string, type: "success" | "error" = "success") => {
@@ -84,24 +118,32 @@ const useChatStream = (
   const typingInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const streamedReplyRef = useRef("");
 
-  const streamMessage = async (messageData: MessageData) => {
+  const streamMessage = async (data: SendMessageInput) => {
     const token = localStorage.getItem("UserLoginTokenApt");
-    const text = messageData.text;
+    const text = data.text;
+
     if (!token || !text.trim()) return;
 
     const isNew = currentConversation?.id ? 0 : 1;
     const titleToUse = conversationTitle || text;
 
-    const template_id = currentConversation?.template_id || messageData?.template_id;
-    const business_id = currentConversation?.business_id || messageData?.business_id;
+    const payload: MessageData = {
+      text,
+      template_id: String(
+        currentConversation?.template_id ?? data.template_id
+      ),
+      business_id: String(
+        currentConversation?.business_id ?? data.business_id
+      ),
+      auto_price: data.auto_price,
+      manual_price: data.manual_price,
+    };
 
     if (!conversationTitle) setConversationTitle(text);
 
-    // Unique IDs for React rendering
     const userId = crypto.randomUUID();
     const botId = crypto.randomUUID();
 
-    // Add user message and empty bot message
     setMessages((prev) => [
       ...prev,
       { id: userId, query: text, message: null },
@@ -122,12 +164,12 @@ const useChatStream = (
           },
           body: JSON.stringify({
             is_new: isNew,
-            conversation_id: currentConversation?.id || "",
-            query: text,
+            conversation_id: currentConversation?.id ?? "",
+            query: payload.text,
             conversation_title: titleToUse,
-            template_id,
-            business_id,
-            auto_price: messageData?.auto_price,
+            template_id: payload.template_id,
+            business_id: payload.business_id,
+            auto_price: payload.auto_price,
           }),
         }
       );
@@ -150,8 +192,7 @@ const useChatStream = (
         const { done, value } = await reader.read();
         if (done) break;
 
-        const decoded = decoder.decode(value, { stream: true });
-        buffer += decoded;
+        buffer += decoder.decode(value, { stream: true });
 
         let boundary = buffer.indexOf("\n\n");
         while (boundary !== -1) {
@@ -160,34 +201,32 @@ const useChatStream = (
 
           if (fullChunk.startsWith("data:")) {
             const chunk = fullChunk.replace(/^data:\s*/, "");
+
             if (chunk === "[DONE]") {
               setLoading(false);
               setIsStreaming(false);
-              if (typingInterval.current) {
-                clearInterval(typingInterval.current);
-                typingInterval.current = null;
-              }
               if (isNew === 1) dispatch(fetchAllConversations());
               return;
             }
 
             try {
               const json = JSON.parse(chunk);
+
               if (json.type === "final") {
                 setMessages((prev) => {
                   const updated = [...prev];
                   updated[updated.length - 1] = {
                     ...updated[updated.length - 1],
-                    message: json?.token?.chats?.[0]?.message || "",
+                    message: json?.token?.chats?.[0]?.message ?? "",
                   };
                   return updated;
                 });
+
                 setCurrentConversation(json?.token);
-                if (onNewConversation && isNew === 1) onNewConversation(json?.token);
-                if (typingInterval.current) {
-                  clearInterval(typingInterval.current);
-                  typingInterval.current = null;
+                if (onNewConversation && isNew === 1) {
+                  onNewConversation(json.token);
                 }
+
                 setIsStreaming(false);
               } else if (json.token) {
                 setIsStreaming(true);
@@ -217,6 +256,7 @@ const useChatStream = (
               console.error("JSON parse err:", err);
             }
           }
+
           boundary = buffer.indexOf("\n\n");
         }
       }
@@ -232,6 +272,8 @@ const useChatStream = (
       }
     }
   };
+
+
 
   return { streamMessage, loading, isStreaming };
 };
@@ -249,7 +291,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const [conversationTitle, setConversationTitle] = useState(conversation?.title || "");
   const [proposalModalOpen, setProposalModalOpen] = useState(false);
   const [expandLoading, setExpandLoading] = useState<Record<number, boolean>>({});
-  const [expandState, setExpandState] = useState<Record<number, "expand" | "shorten" | null>>({});
+  const [, setExpandState] = useState<Record<number, "expand" | "shorten" | null>>({});
   const [showTooltip, setShowTooltip] = useState(false);
 
   const dispatch = useDispatch();
@@ -257,7 +299,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const messageEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const { streamMessage, loading, isStreaming } = useChatStream(
+  const { loading, isStreaming } = useChatStream(
     currentConversation,
     conversationTitle,
     setConversationTitle,
@@ -295,24 +337,38 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     navigator.clipboard.writeText(plainText).then(() => showToast("Copied to clipboard!", "success"));
   };
 
-  
-  const [expandStates, setExpandStates] = useState({});
 
-  const handleExpandShorten = async (msgIndex, content, type) => {
-    console.log(msgIndex, content, type, "msgIndex, content, type")
-    const chat_id = currentConversation?.chats[0]?.id;
-    const payload = { previousProposal: content, chat_id };
+  // const [expandStates, setExpandStates] = useState({});
+  const [expandStates, setExpandStates] =
+    useState<Record<number, "expand" | "short">>({});
+
+
+  const handleExpandShorten = async (
+    msgIndex: number,
+    content: string | null | undefined,
+    type: "expand" | "short"
+  ) => {
+    const conversation_id = currentConversation?.chats?.[0]?.id;
+
+    if (!conversation_id || !content) {
+      message.error("Invalid conversation or content");
+      return;
+    }
+
+    const payload: ChatPayload = {
+      conversation_id,
+      [type === "expand" ? "prompt" : "message"]: content,
+    };
+
     setExpandLoading((prev) => ({ ...prev, [msgIndex]: true }));
 
     try {
-      let updated = "";
-      if (type === "expand") {
-        const res = await ChatExpend(payload);
-        updated = res?.data?.data;
-      } else {
-        const res = await ChatShorte(payload);
-        updated = res?.data?.data;
-      }
+      const res =
+        type === "expand"
+          ? await ChatExpend(payload)
+          : await ChatShorte(payload);
+
+      const updated = res?.data?.data;
 
       if (updated) {
         setMessages((prev) =>
@@ -320,9 +376,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             i === msgIndex ? { ...msg, message: updated } : msg
           )
         );
+
         setExpandStates((prev) => ({ ...prev, [msgIndex]: type }));
+
         message.success(
-          `${type === "expand" ? "Expanded" : "Shortened"} successfully.`
+          type === "expand" ? "Expanded successfully." : "Shortened successfully."
         );
       }
     } catch (err) {
@@ -332,6 +390,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       setExpandLoading((prev) => ({ ...prev, [msgIndex]: false }));
     }
   };
+  const mapConversation = (convo: Conversation): SelectedProposal => ({
+    id: String(convo.id),
+    title: convo.title,
+    template_id: convo.template_id,
+    business_id: convo.business_id,
+    chats: convo.chats?.map((chat) => ({
+      id: String(chat.id),
+      message: chat.message ?? null,
+      prompt: chat.query ?? undefined,
+    })),
+  });
+
+
+  const handleSendMessage = (data: {
+    text: string;
+    template_id: number;
+    business_id: number;
+    auto_price: boolean;
+    manual_price?: string;
+  }) => {
+    console.log(data.text);
+    console.log(data.template_id);
+  };
+
+
   return (
     <div className="chat-window">
       {/* HEADER */}
@@ -407,7 +490,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                             i,
                             msg.message,
                             expandStates[i] === "expand"
-                              ? "shorten"
+                              ? "short"
                               : "expand"
                           )
                         }
@@ -451,12 +534,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* INPUT */}
-      <ChatInput
+      {/* <ChatInput
         onSendMessage={streamMessage}
         resetTrigger={resetTrigger}
         onTemplateSelect={() => { }}
         currentConversation={currentConversation}
+      /> */}
+      {/* <ChatInput
+        onSendMessage={streamMessage}
+        resetTrigger={resetTrigger}
+        currentConversation={currentConversation}
+      /> */}
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        resetTrigger={resetTrigger}
+        currentConversation={currentConversation}
       />
+
 
       {/* PROPOSAL MODAL */}
       {proposalModalOpen && (
@@ -472,7 +566,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               </button>
             </div>
             <div className="modal-body">
-              <ProposalForm selectedProposal={currentConversation} onSubmit={submitProposal} />
+              {/* <ProposalForm selectedProposal={currentConversation} onSubmit={submitProposal} /> */}
+              <ProposalForm
+                // selectedProposal={mapConversation(currentConversation)}
+                onSubmit={submitProposal}
+                selectedProposal={
+                  currentConversation
+                    ? mapConversation(currentConversation)
+                    : null
+                }
+
+              />
+
             </div>
           </div>
         </div>

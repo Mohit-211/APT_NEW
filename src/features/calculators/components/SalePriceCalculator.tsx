@@ -49,15 +49,34 @@ const SalePriceCalculatorComponent: React.FC<SalePriceCalculatorProps> = ({
     return found ? found.label : value.toString();
   };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     const data = await salePriceCalculator(
+  //       listPrice,
+  //       percentageOff,
+  //       priceOfMultiItemCal,
+  //       numberOfItemsAtListPrice,
+  //       numberOfItemsInDeal,
+  //       priceOfFractionCal,
+  //       fraction
+  //     );
+  //     setResult(data);
+  //   } catch (error) {
+  //     console.error("Calculation error:", error);
+  //     message.error("Error performing calculation.");
+  //   }
+  // };
+
+
   const handleSubmit = async () => {
     try {
       const data = await salePriceCalculator(
-        listPrice,
-        percentageOff,
-        priceOfMultiItemCal,
+        listPrice ?? 0,
+        percentageOff ?? 0,
+        priceOfMultiItemCal ?? 0,
         numberOfItemsAtListPrice,
         numberOfItemsInDeal,
-        priceOfFractionCal,
+        priceOfFractionCal ?? 0,
         fraction
       );
       setResult(data);
@@ -82,8 +101,10 @@ const SalePriceCalculatorComponent: React.FC<SalePriceCalculatorProps> = ({
   }, []);
 
   const handleView = async () => {
+    const id = calculatordetails?.calculatordetails?.id;
+    if (id === undefined) return; // Guard against undefined
     try {
-      await CalculatorViewApi(calculatordetails?.calculatordetails?.id);
+      await CalculatorViewApi(id);
     } catch (error) {
       console.error(error);
     }

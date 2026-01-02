@@ -44,8 +44,10 @@ const SellingPriceCalculatorComponent: React.FC<SellingPriceProps> = ({
   }, []);
 
   const handleView = async () => {
+       const id = calculatordetails?.calculatordetails?.id;
+    if (id === undefined) return; // Guard against undefined
     try {
-      await CalculatorViewApi(calculatordetails?.calculatordetails?.id);
+      await CalculatorViewApi(id);
     } catch (error) {
       console.error(error);
     }

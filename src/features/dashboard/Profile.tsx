@@ -110,7 +110,7 @@ const Profile: React.FC = () => {
   // Load redux profile
   useEffect(() => {
     if (storedValue) {
-      dispatch(getClientProfile(storedValue) as any);
+      dispatch(getClientProfile() as any);
     }
   }, [dispatch, storedValue]);
 
@@ -185,7 +185,7 @@ const Profile: React.FC = () => {
     try {
       const res = await UserEditProfileAPI(name, selectedImage, mobile);
       if (storedValue) {
-        dispatch(getClientProfile(storedValue) as any);
+        dispatch(getClientProfile() as any);
       }
       setProfile(res.data);
       if (res.data?.code === 200 || res.data?.status === 200) {

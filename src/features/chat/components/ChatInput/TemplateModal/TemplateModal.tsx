@@ -37,8 +37,9 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
   const [previewTemplate, setPreviewTemplate] = useState<APTTemplate | null>(
     null
   );
-  /* TEMPLATE LIST — Now with content */
-  const [templates, setTemplates] = useState();
+ /* TEMPLATE LIST — Now with content */
+const [templates, setTemplates] = useState<APTTemplate[]>([]);
+
 
   console.log(templates,"template===>")
   useEffect(() => {

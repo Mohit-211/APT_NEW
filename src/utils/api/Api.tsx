@@ -10,6 +10,7 @@ export interface OTPPayload {
 }
 
 export interface LoginResponse {
+  status: any;
   token: string;
   message: string;
   data?: any;

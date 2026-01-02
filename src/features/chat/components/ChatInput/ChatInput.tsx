@@ -10,9 +10,11 @@ import {
   BsCurrencyDollar as BsCurrencyDollarRaw,
   BsChevronDown as BsChevronDownRaw,
 } from "react-icons/bs";
+
 import { message as antdMessage } from "antd";
 import { GetBusiness } from "@/utils/api/Api";
 
+/* ICON CASTING */
 const FiSend = FiSendRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsBuilding = BsBuildingRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsFileText = BsFileTextRaw as React.FC<React.SVGProps<SVGSVGElement>>;
@@ -36,10 +38,11 @@ interface ChatInputProps {
     auto_price: boolean;
     manual_price?: string;
   }) => void;
-  resetTrigger: number | string | boolean; // Trigger to reset input
+  resetTrigger: number | string | boolean;
   onTemplateSelect?: (template: APTTemplate) => void;
   currentConversation?: any;
 }
+
 
 const ChatInput: React.FC<ChatInputProps> = ({
   onSendMessage,
@@ -48,7 +51,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   currentConversation,
 }) => {
   const [message, setMessage] = useState("");
-
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loadingBusinesses, setLoadingBusinesses] = useState(false);
 
@@ -62,9 +64,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [showPricingDropdown, setShowPricingDropdown] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const businessDropdownRef = useRef<HTMLDivElement | null>(null);
-  const pricingDropdownRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const businessDropdownRef = useRef<HTMLDivElement>(null);
+  const pricingDropdownRef = useRef<HTMLDivElement>(null);
 
   /* =======================
      FETCH BUSINESSES
@@ -84,46 +86,43 @@ const ChatInput: React.FC<ChatInputProps> = ({
   }, []);
 
   /* =======================
-     AUTO-SELECT BUSINESS
+     AUTO SELECT FROM CONVERSATION
   ======================= */
   const conversationChat = currentConversation?.chats?.[0];
   const conversationBusinessId = conversationChat?.business_id;
   const conversationTemplateId = conversationChat?.template_id;
 
   useEffect(() => {
-    if (!conversationBusinessId || businesses.length === 0) return;
-    const matchedBusiness = businesses.find((b) => b.id === conversationBusinessId);
-    if (matchedBusiness) setSelectedBusiness(matchedBusiness);
+    if (!conversationBusinessId || !businesses.length) return;
+    const matched = businesses.find((b) => b.id === conversationBusinessId);
+    if (matched) setSelectedBusiness(matched);
   }, [conversationBusinessId, businesses]);
 
   /* =======================
-     RESET INPUT ON TRIGGER
+     RESET ON NEW CHAT
   ======================= */
   useEffect(() => {
-    // Clear input, manual pricing
     setMessage("");
     setManualPricing("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
-
-    // Clear selected business & template when new chat is opened
     setSelectedBusiness(null);
     setSelectedTemplate(null);
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
   }, [resetTrigger]);
 
   /* =======================
      CLOSE DROPDOWNS
   ======================= */
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (
         businessDropdownRef.current &&
-        !businessDropdownRef.current.contains(event.target as Node)
+        !businessDropdownRef.current.contains(e.target as Node)
       ) {
         setShowBusinessDropdown(false);
       }
       if (
         pricingDropdownRef.current &&
-        !pricingDropdownRef.current.contains(event.target as Node)
+        !pricingDropdownRef.current.contains(e.target as Node)
       ) {
         setShowPricingDropdown(false);
       }
@@ -137,25 +136,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
      SEND MESSAGE
   ======================= */
   const handleSend = () => {
-    if (!message.trim()) {
-      antdMessage.error("Please enter a message");
-      return;
-    }
-
-    if (!selectedBusiness) {
-      antdMessage.error("Please select a business");
-      return;
-    }
+    if (!message.trim()) return antdMessage.error("Please enter a message");
+    if (!selectedBusiness) return antdMessage.error("Please select a business");
 
     const templateId = selectedTemplate?.id ?? conversationTemplateId;
-    if (!templateId) {
-      antdMessage.error("Please select a template");
-      return;
-    }
+    if (!templateId) return antdMessage.error("Please select a template");
 
     if (pricingMode === "manual" && !manualPricing.trim()) {
-      antdMessage.error("Please enter manual pricing");
-      return;
+      return antdMessage.error("Please enter manual pricing");
     }
 
     onSendMessage({
@@ -211,7 +199,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               disabled={loadingBusinesses}
             >
               <BsBuilding />
-              <span>{selectedBusiness ? selectedBusiness.name : "Business"}</span>
+              <span>{selectedBusiness?.name || "Business"}</span>
               <BsChevronDown />
             </button>
 
@@ -260,14 +248,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
               onClick={() => setShowPricingDropdown((p) => !p)}
             >
               <BsCurrencyDollar />
-              <span>{pricingMode === "auto" ? "Auto Pricing" : "Manual Pricing"}</span>
+              <span>
+                {pricingMode === "auto" ? "Auto Pricing" : "Manual Pricing"}
+              </span>
               <BsChevronDown />
             </button>
 
             {showPricingDropdown && (
               <div className="compact-dropdown">
                 <div
-                  className={`dropdown-option ${pricingMode === "auto" ? "selected" : ""}`}
+                  className={`dropdown-option ${
+                    pricingMode === "auto" ? "selected" : ""
+                  }`}
                   onClick={() => {
                     setPricingMode("auto");
                     setShowPricingDropdown(false);
@@ -276,7 +268,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   Auto Fetch Pricing
                 </div>
                 <div
-                  className={`dropdown-option ${pricingMode === "manual" ? "selected" : ""}`}
+                  className={`dropdown-option ${
+                    pricingMode === "manual" ? "selected" : ""
+                  }`}
                   onClick={() => {
                     setPricingMode("manual");
                     setShowPricingDropdown(false);
@@ -299,7 +293,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           )}
         </div>
 
-        {/* INPUT */}
+        {/* MESSAGE INPUT */}
         <div className="chat-input-box">
           <span className="char-count">{message.length}/3000</span>
           <textarea

@@ -65,7 +65,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
   const [showDropdownId, setShowDropdownId] = useState<number | null>(null);
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [templates, setTemplates] = useState<Template[]>([]);
+  const [, setTemplates] = useState<Template[]>([]);
+  
 
   /* Fetch Businesses & Templates */
   useEffect(() => {

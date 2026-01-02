@@ -49,7 +49,7 @@ const OneTimeWorkshopComponent: React.FC<OneTimeProps> = ({
   // State / UI control
   const [selectedLevel, setSelectedLevel] = useState("");
   const [participantRange, setParticipantRange] = useState("");
-  const [hourRateRange, setHourRateRange] = useState("");
+  const [, setHourRateRange] = useState("");
   const [isLevelDropdownOpen, setIsLevelDropdownOpen] = useState(false);
   const [isDiscountDropdownOpen, setIsDiscountDropdownOpen] = useState(false);
 

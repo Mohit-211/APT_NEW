@@ -1,7 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { GetProfile } from "@/utils/api/Api";
 
-// ---------- TYPES ---------------------------------------------------------
+/* =========================
+   TYPES
+========================= */
 
 export interface ProfileAttachment {
   file_name: string;
@@ -21,7 +23,9 @@ interface ClientProfileState {
   error: string | null;
 }
 
-// ---------- INITIAL STATE -------------------------------------------------
+/* =========================
+   INITIAL STATE
+========================= */
 
 const initialState: ClientProfileState = {
   clientProfile: null,
@@ -29,13 +33,15 @@ const initialState: ClientProfileState = {
   error: null,
 };
 
-// ---------- THUNK ---------------------------------------------------------
+/* =========================
+   THUNK
+========================= */
 
 export const getClientProfile = createAsyncThunk<
   ClientProfileData, // Return type
-  string, // Token argument
-  { rejectValue: string } // Error type
->("clientProfile/fetch", async (token, { rejectWithValue }) => {
+  void,              // ✅ No argument needed
+  { rejectValue: string }
+>("clientProfile/fetch", async (_, { rejectWithValue }) => {
   try {
     const res = await GetProfile();
 
@@ -43,12 +49,11 @@ export const getClientProfile = createAsyncThunk<
       return rejectWithValue("Invalid profile response.");
     }
 
-    // Normalize the backend response
     return {
       name: res.data.name,
       email: res.data.email,
       mobile: res.data.mobile,
-      attachements: res.data.attachements || [],
+      attachements: res.data.attachements ?? [],
     };
   } catch (err: any) {
     return rejectWithValue(
@@ -57,7 +62,9 @@ export const getClientProfile = createAsyncThunk<
   }
 });
 
-// ---------- SLICE ---------------------------------------------------------
+/* =========================
+   SLICE
+========================= */
 
 const clientProfileSlice = createSlice({
   name: "clientProfile",
@@ -65,8 +72,8 @@ const clientProfileSlice = createSlice({
   reducers: {
     resetClientProfile(state) {
       state.clientProfile = null;
-      state.error = null;
       state.loading = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -85,7 +92,7 @@ const clientProfileSlice = createSlice({
       .addCase(getClientProfile.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          (action.payload as string) || "Unable to load profile data.";
+          action.payload ?? "Unable to load profile data.";
       });
   },
 });

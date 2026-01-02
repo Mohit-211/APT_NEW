@@ -19,12 +19,15 @@ const PartnershipDiscounts: React.FC<PartnershipDiscountsProps> = ({
   const [secondSelectValue, setSecondSelectValue] = useState<number>(0);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0 }); // TS-safe
+    window.scrollTo({ top: 0, left: 0 });
   }, []);
 
   const handleView = async () => {
+    const id = calculatordetails?.calculatordetails?.id;
+    if (id === undefined) return; // Guard against undefined
+
     try {
-      await CalculatorViewApi(calculatordetails?.calculatordetails?.id);
+      await CalculatorViewApi(id); // id is now guaranteed to be string | number
     } catch (err) {
       console.log("view error", err);
       message.error("Unable to record calculator view.");

@@ -22,9 +22,12 @@ export default function Signin() {
   // const [showPassword, setShowPassword] = useState(false);
 
   const [alert, setAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
+  const [alertConfig, setAlertConfig] = useState<{
+    text: string;
+    icon: "success" | "error" | "warning" | "info" | "question";
+  }>({
     text: "",
-    icon: "",
+    icon: "error",
   });
 
   const onFinish = (values: { email: string; password: string }) => {
