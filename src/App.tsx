@@ -50,6 +50,7 @@ import EditorPage from "@/features/chat/EditorPage/EditorPage";
 
 // API
 import { checkUserStatus } from "@/utils/api/Api";
+import ChatGuide from "./features/ChatGuide/ChatGuide";
 
 function AppContent() {
   const location = useLocation();
@@ -211,6 +212,8 @@ function AppContent() {
           <Route path="/chat/stream" element={<ChatStreamComponent />} />
           <Route path="/proposal-editor" element={<EditorPage />} />
           {/* AI Proposal */}
+          <Route path="/steps" element={<ChatGuide  />} />
+
           <Route path="/ai-proposals" element={<AIProposal />} />
         </Routes>
       </div>

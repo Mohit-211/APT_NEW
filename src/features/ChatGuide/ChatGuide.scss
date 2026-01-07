@@ -1,0 +1,66 @@
+.chat-guide-wrapper {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  width: 720px;
+}
+
+.chat-guide {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  gap: 18px;
+}
+
+.guide-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.4;
+}
+
+.guide-step span {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.guide-step.active {
+  opacity: 1;
+}
+
+.guide-step.active span {
+  background: #1677ff;
+  color: #fff;
+}
+
+.guide-next {
+  margin-left: auto;
+  background: #1677ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.guide-next:disabled {
+  background: #cbd5e1;
+}
+
+.guide-instruction {
+  margin-top: 8px;
+  text-align: center;
+  color: #475569;
+  font-size: 14px;
+}

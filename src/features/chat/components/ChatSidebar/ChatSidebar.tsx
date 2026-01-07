@@ -3,7 +3,7 @@ import "./ChatSidebar.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
-
+import { DeleteOutlined, LoadingOutlined, CheckOutlined } from "@ant-design/icons";
 /* ICONS */
 import {
   BsThreeDotsVertical as BsThreeRaw,
@@ -203,19 +203,27 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
                       className="dropdown-overlay"
                       onClick={() => setShowDropdownId(null)}
                     />
-                    <div className="custom-dropdown">
-                      <button
-                        className="dropdown-item delete"
-                        onClick={() => handleDelete(item.id)}
-                        disabled={deletingId === item.id}
-                      >
-                        {deletingId === item.id
-                          ? "Deleting..."
-                          : deletedId === item.id
-                          ? "Deleted ✓"
-                          : "Delete"}
-                      </button>
-                    </div>
+                  <div className="custom-dropdown">
+  <button
+    className="dropdown-item delete"
+    onClick={() => handleDelete(item.id)}
+    disabled={deletingId === item.id}
+  >
+    {deletingId === item.id ? (
+      <>
+        <LoadingOutlined spin /> Deleting
+      </>
+    ) : deletedId === item.id ? (
+      <>
+        <CheckOutlined style={{ color: "green" }} /> Deleted
+      </>
+    ) : (
+      <>
+        <DeleteOutlined /> Delete
+      </>
+    )}
+  </button>
+</div>
                   </>
                 )}
               </div>

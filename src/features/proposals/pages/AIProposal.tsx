@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import ChatLayout from "@/features/chat/ChatLayout";
+import ProductTour from "@/features/chat/components/ProductTour/ProductTour";
+
+const TOUR_KEY = "ai_proposal_product_tour_seen";
 
 const AIProposal: React.FC = () => {
   const [loading] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const token =
     typeof window !== "undefined"
@@ -11,7 +15,26 @@ const AIProposal: React.FC = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
+
+    if (typeof window === "undefined") return;
+
+    // ✅ Check if tour already shown
+    const hasSeenTour = localStorage.getItem(TOUR_KEY);
+
+    if (!hasSeenTour) {
+      // ⏳ wait for ChatLayout to render
+      const timer = setTimeout(() => {
+        setShowTour(true);
+      }, 400);
+
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  const handleTourFinish = () => {
+    setShowTour(false);
+    localStorage.setItem(TOUR_KEY, "true"); // ✅ mark as seen
+  };
 
   if (!token) {
     return (
@@ -48,16 +71,20 @@ const AIProposal: React.FC = () => {
 
   return (
     <div className="ai-proposal-page">
+      {/* 🔹 Main Chat UI */}
       <ChatLayout />
 
-      {/* Loading Overlay */}
+      {/* 🔹 Product Tour (FIRST TIME ONLY) */}
+      {showTour && <ProductTour onFinish={handleTourFinish} />}
+
+      {/* 🔹 Loading Overlay */}
       {loading && (
         <div className="loading-overlay">
           <div className="loading-content">
             <div className="spinner">
-              <div className="spinner-ring"></div>
-              <div className="spinner-ring"></div>
-              <div className="spinner-ring"></div>
+              <div className="spinner-ring" />
+              <div className="spinner-ring" />
+              <div className="spinner-ring" />
             </div>
             <p className="loading-text">Generating proposal...</p>
           </div>
