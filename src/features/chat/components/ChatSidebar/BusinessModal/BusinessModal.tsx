@@ -30,7 +30,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [loading, setLoading] = React.useState(false);
+  // const [loading, setLoading] = React.useState(false);
 
   const [formData, setFormData] = React.useState<BusinessFormData>({
     businessName: "",
@@ -64,7 +64,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
     };
 
     try {
-      setLoading(true);
+      // setLoading(true);
 
       const response = await CreateBusniness(payload);
 
@@ -78,7 +78,7 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
     } catch (error) {
       message.error("Failed to add business. Try again.");
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
