@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./ChatSidebar.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { Dropdown, Menu, message } from "antd";
 import { DeleteOutlined, LoadingOutlined, CheckOutlined } from "@ant-design/icons";
 /* ICONS */
 import {
@@ -23,6 +23,7 @@ import BusinessModal from "./BusinessModal/BusinessModal";
 /* API + REDUX */
 import { fetchAllConversations } from "@/app/store/slices/conversationSlice";
 import {
+  DeleteBusinessnApi,
   DeleteConversationApi,
   GetBusiness,
   GetTemplates,
@@ -66,7 +67,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [, setTemplates] = useState<Template[]>([]);
-  
+
 
   /* Fetch Businesses & Templates */
   useEffect(() => {
@@ -150,7 +151,22 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
   };
 
   const handleBackToHome = () => navigate("/");
+  const handleDeleteBusiness = async (id: React.SetStateAction<number | null>) => {
+  setDeletingId(id);
+  try {
+    await DeleteBusinessnApi(id);
+    setBusinesses((prev) => prev.filter((b) => b.id !== id));
 
+    message.success("Business deleted successfully!");
+    setDeletedId(id);
+    setTimeout(() => setDeletedId(null), 2000);
+  } catch (err) {
+    console.error("Error deleting business", err);
+    message.error("Failed to delete business.");
+  } finally {
+    setDeletingId(null);
+  }
+};
   return (
     <div className="chat-sidebar">
       {/* BACK BUTTON */}
@@ -174,9 +190,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
           {conversationState?.items?.map((item: ConversationItem) => (
             <li
               key={item.id}
-              className={`conversation-item-wrapper ${
-                selectedConversationId === item.id ? "selected" : ""
-              }`}
+              className={`conversation-item-wrapper ${selectedConversationId === item.id ? "selected" : ""
+                }`}
             >
               <div
                 className="conversation-item"
@@ -203,27 +218,27 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
                       className="dropdown-overlay"
                       onClick={() => setShowDropdownId(null)}
                     />
-                  <div className="custom-dropdown">
-  <button
-    className="dropdown-item delete"
-    onClick={() => handleDelete(item.id)}
-    disabled={deletingId === item.id}
-  >
-    {deletingId === item.id ? (
-      <>
-        <LoadingOutlined spin /> Deleting
-      </>
-    ) : deletedId === item.id ? (
-      <>
-        <CheckOutlined style={{ color: "green" }} /> Deleted
-      </>
-    ) : (
-      <>
-        <DeleteOutlined /> Delete
-      </>
-    )}
-  </button>
-</div>
+                    <div className="custom-dropdown">
+                      <button
+                        className="dropdown-item delete"
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deletingId === item.id}
+                      >
+                        {deletingId === item.id ? (
+                          <>
+                            <LoadingOutlined spin /> Deleting
+                          </>
+                        ) : deletedId === item.id ? (
+                          <>
+                            <CheckOutlined style={{ color: "green" }} /> Deleted
+                          </>
+                        ) : (
+                          <>
+                            <DeleteOutlined /> Delete
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -245,20 +260,48 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
         </div>
 
         <ul className="business-list">
-          {businesses.map((business) => (
+          {businesses?.map((business) => (
             <li
-              key={business.id}
-              className={`business-card ${
-                selectedBusiness?.id === business.id ? "selected" : ""
-              }`}
-              onClick={() => handleBusinessSelect(business.id)}
+              key={business?.id}
+              className={`business-card ${selectedBusiness?.id === business.id ? "selected" : ""}`}
             >
-              <BsBuilding className="business-icon" />
-              <div className="business-info">
-                <span className="business-name">{business.name}</span>
-                <span className="business-location">{business.location}</span>
+              <div
+                className="business-card-inner"
+                onClick={() => handleBusinessSelect(business.id)}
+              >
+                <BsBuilding className="business-icon" />
+                <div className="business-info">
+                  <span className="business-name">{business?.name}</span>
+                  <span className="business-location">{business?.location}</span>
+                </div>
               </div>
+
+              <Dropdown
+                trigger={["click"]}
+                overlay={
+                  <Menu
+                    items={[
+                      {
+                        key: "delete",
+                        label:
+                          deletingId === business.id ? (
+                            <span style={{ color: "#999" }}>Deleting...</span>
+                          ) : deletedId === business.id ? (
+                            <span style={{ color: "green" }}>Deleted ✓</span>
+                          ) : (
+                            <span onClick={() => handleDeleteBusiness(business.id)}>
+                              Delete
+                            </span>
+                          ),
+                      },
+                    ]}
+                  />
+                }
+              >
+                <BsThreeDotsVertical className="menu-icon" />
+              </Dropdown>
             </li>
+
           ))}
         </ul>
       </div>

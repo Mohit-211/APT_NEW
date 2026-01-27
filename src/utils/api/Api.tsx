@@ -224,6 +224,12 @@ export const ChatShorte = (payload: ChatPayload) =>
 export const ChateProposalEdited = (payload: ChatPayload) =>
   axiosInstance.post("aichat/conversations/chats/message/update", payload);
 
+export const CreateBusniness = async (payload:any) => {
+  return await axiosInstance.post("business", payload);
+};
+export const DeleteBusinessnApi = async (businessid:any) => {
+  return await axiosInstance.delete(`business/${businessid}`);
+};
 export const GetBusiness = async () => {
   return await axiosInstance.get("business");
 }

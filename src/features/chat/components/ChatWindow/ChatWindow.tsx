@@ -365,7 +365,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       manual_price: data.manual_price,
     });
   };
-
+// console.log(messages,"messages")
   return (
     <div className="chat-window">
       {/* HEADER */}
@@ -400,42 +400,42 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             <p>Ask me anything about creating proposals, pricing, or project details</p>
           </div>
         )}
-
-        {messages.map((msg, i) => (
-          <div key={msg.id} className="message-group">
-            {msg.query && <div className="chat-bubble user"><div className="message-content">{msg.query}</div></div>}
-            {msg.message !== null && (
-              <div className="chat-bubble bot">
-                <div className="bot-avatar"><FaWandMagicSparkles /></div>
-                <div className="bot-message-wrapper">
-                  <div className="message-content">
-                    <span dangerouslySetInnerHTML={{ __html: msg.message || "" }} />
-                    {i === messages.length - 1 && isStreaming && <span className="typing-cursor">▌</span>}
-                  </div>
-                  {msg.message && (
-                    <div className="message-actions">
-                      <button className="action-button" onClick={() => handleCopy(msg.message!)} title="Copy to Clipboard">
-                        <FaRegCopy /><span>Copy</span>
-                      </button>
-                      <button className="action-button" onClick={handleGenerateProposal} title="Generate Proposal">
-                        <FaFileSignature /><span>Proposal</span>
-                      </button>
-                      <button
-                        className="action-button"
-                        onClick={() =>
-                          handleExpandShorten(i, msg.message, expandLoading[i] ? "short" : "expand")
-                        }
-                        disabled={expandLoading[i]}
-                      >
-                        {expandLoading[i] ? <Spin size="small" /> : expandLoading[i] ? <AiOutlineShrink /> : <AiOutlineExpandAlt />}
-                      </button>
+        {messages &&
+          messages?.map((msg, i) => (
+            <div key={msg.id} className="message-group">
+              {msg?.query && <div className="chat-bubble user"><div className="message-content">{msg.query}</div></div>}
+              {msg?.message && (
+                <div className="chat-bubble bot">
+                  <div className="bot-avatar"><FaWandMagicSparkles /></div>
+                  <div className="bot-message-wrapper">
+                    <div className="message-content">
+                      <span dangerouslySetInnerHTML={{ __html: msg.message || "" }} />
+                      {i === messages.length - 1 && isStreaming && <span className="typing-cursor">▌</span>}
                     </div>
-                  )}
+                    {msg?.message && (
+                      <div className="message-actions">
+                        <button className="action-button" onClick={() => handleCopy(msg.message!)} title="Copy to Clipboard">
+                          <FaRegCopy /><span>Copy</span>
+                        </button>
+                        <button className="action-button" onClick={handleGenerateProposal} title="Generate Proposal">
+                          <FaFileSignature /><span>Proposal</span>
+                        </button>
+                        <button
+                          className="action-button"
+                          onClick={() =>
+                            handleExpandShorten(i, msg.message, expandLoading[i] ? "short" : "expand")
+                          }
+                          disabled={expandLoading[i]}
+                        >
+                          {expandLoading[i] ? <Spin size="small" /> : expandLoading[i] ? <AiOutlineShrink /> : <AiOutlineExpandAlt />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))}
         {loading && !isStreaming && (
           <div className="chat-bubble bot">
             <div className="bot-avatar"><FaWandMagicSparkles className="pulse-icon" /></div>

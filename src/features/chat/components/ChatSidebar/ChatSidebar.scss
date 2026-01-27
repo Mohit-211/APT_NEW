@@ -71,11 +71,9 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(
-      135deg,
-      $primary-red 0%,
-      darken($primary-red, 8%) 100%
-    );
+    background: linear-gradient(135deg,
+        $primary-red 0%,
+        darken($primary-red, 8%) 100%);
     color: $text-white;
     border: none;
     border-radius: $border-radius-lg;
@@ -150,11 +148,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(
-      135deg,
-      $primary-blue 0%,
-      darken($primary-blue, 10%) 100%
-    );
+    background: linear-gradient(135deg,
+        $primary-blue 0%,
+        darken($primary-blue, 10%) 100%);
     color: $text-white;
     border: none;
     border-radius: $border-radius-sm;
@@ -242,11 +238,9 @@
       }
 
       &.selected {
-        background: linear-gradient(
-          135deg,
-          $primary-red 0%,
-          darken($primary-red, 5%) 100%
-        );
+        background: linear-gradient(135deg,
+            $primary-red 0%,
+            darken($primary-red, 5%) 100%);
         border-color: $primary-red;
         box-shadow: $shadow-sm;
 
@@ -370,11 +364,9 @@
     display: flex;
     flex-direction: column;
     padding: 1.5rem 1rem;
-    background: linear-gradient(
-      135deg,
-      rgba($primary-blue, 0.03) 0%,
-      rgba($primary-blue, 0.01) 100%
-    );
+    background: linear-gradient(135deg,
+        rgba($primary-blue, 0.03) 0%,
+        rgba($primary-blue, 0.01) 100%);
     overflow: hidden;
   }
 
@@ -404,6 +396,12 @@
       }
     }
 
+    .business-card-inner {
+      display: flex;
+      gap: 7px;
+      align-items: anchor-center;
+    }
+
     .business-card {
       display: flex;
       align-items: center;
@@ -414,7 +412,11 @@
       background: $bg-primary;
       border: 1px solid $border-light;
       cursor: pointer;
+      justify-content: space-between;
+
       transition: $transition-base;
+
+
 
       &:hover {
         background: rgba($primary-blue, 0.04);
@@ -424,11 +426,9 @@
       }
 
       &.selected {
-        background: linear-gradient(
-          135deg,
-          $primary-blue 0%,
-          darken($primary-blue, 8%) 100%
-        );
+        background: linear-gradient(135deg,
+            $primary-blue 0%,
+            darken($primary-blue, 8%) 100%);
         border-color: $primary-blue;
         box-shadow: $shadow-sm;
 
@@ -490,6 +490,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -501,6 +502,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

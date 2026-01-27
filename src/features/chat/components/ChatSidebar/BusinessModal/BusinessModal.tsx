@@ -4,6 +4,7 @@ import "./BusinessModal.scss";
 
 /* ICON CAST (required in your project) */
 import { BsX as BsXRaw } from "react-icons/bs";
+import { CreateBusniness } from "@/utils/api/Api";
 const BsX = BsXRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 
 /* TYPES */
@@ -29,6 +30,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const [loading, setLoading] = React.useState(false);
+
   const [formData, setFormData] = React.useState<BusinessFormData>({
     businessName: "",
     location: "",
@@ -46,16 +49,39 @@ const BusinessModal: React.FC<BusinessModalProps> = ({
       description: "",
     });
   };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.businessName || !formData.location) {
       message.error("Please fill in all required fields");
       return;
     }
 
-    onSubmit(formData);
-    resetForm();
+    const payload = {
+      name: formData.businessName,
+      location: formData.location,
+      type: formData.type,
+      category: formData.category,
+      description: formData.description,
+    };
+
+    try {
+      setLoading(true);
+
+      const response = await CreateBusniness(payload);
+
+      // message.success("Business card added successfully!");
+
+      // Optionally pass data to parent component
+      onSubmit && onSubmit(response?.data);
+
+      // Close + reset form
+      handleClose();
+    } catch (error) {
+      message.error("Failed to add business. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const handleClose = () => {
     resetForm();
