@@ -70,10 +70,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
 
 
   /* Fetch Businesses & Templates */
-  useEffect(() => {
-    GetBusiness()
+  const FetchGetBusiness=()=>{
+ GetBusiness()
       .then((res) => setBusinesses(res?.data?.data || []))
       .catch((e) => console.log("Error fetching businesses:", e));
+  }
+  useEffect(() => {
+   FetchGetBusiness()
 
     GetTemplates()
       .then((res) => setTemplates(res?.data?.data || []))
@@ -148,6 +151,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     setBusinesses([...businesses, newBusiness]);
     setIsBusinessModalOpen(false);
     message.success("Business added successfully!");
+    FetchGetBusiness()
   };
 
   const handleBackToHome = () => navigate("/");
@@ -158,6 +162,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     setBusinesses((prev) => prev.filter((b) => b.id !== id));
 
     message.success("Business deleted successfully!");
+    FetchGetBusiness()
     setDeletedId(id);
     setTimeout(() => setDeletedId(null), 2000);
   } catch (err) {
@@ -167,6 +172,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     setDeletingId(null);
   }
 };
+console.log(businesses,"businesses")
   return (
     <div className="chat-sidebar">
       {/* BACK BUTTON */}
