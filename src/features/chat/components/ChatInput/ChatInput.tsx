@@ -68,17 +68,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const pricingDropdownRef = useRef<HTMLDivElement>(null);
 
   /* =======================
-     FETCH BUSINESSES
-  ======================= */
-  useEffect(() => {
-    setLoadingBusinesses(true);
-    GetBusiness()
-      .then((res) => setBusinesses(res?.data?.data || []))
-      .catch(() => antdMessage.error("Unable to load businesses"))
-      .finally(() => setLoadingBusinesses(false));
-  }, []);
-
-  /* =======================
      AUTO SELECT BUSINESS & TEMPLATE
   ======================= */
   useEffect(() => {
@@ -95,8 +84,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
         category: "Unknown",
         description: "",
         preview: "",
-        features: [] as string[], // cast as array of strings if features expects string[]
-      } as APTTemplate); // cast the whole object as APTTemplate
+        features: [] as string[],
+      } as APTTemplate);
     }
   }, [currentConversation, businesses]);
 
@@ -194,28 +183,48 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <div className="option-item" ref={businessDropdownRef} id="tour-business">
             <button
               className={`option-btn ${selectedBusiness ? "active" : ""}`}
-              onClick={() => setShowBusinessDropdown((prev) => !prev)}
+              onClick={async () => {
+                setShowBusinessDropdown((prev) => !prev);
+
+                // CALL API EVERY TIME dropdown is clicked
+                setLoadingBusinesses(true);
+                try {
+                  const res = await GetBusiness();
+                  setBusinesses(res?.data?.data || []);
+                } catch {
+                  antdMessage.error("Unable to load businesses");
+                } finally {
+                  setLoadingBusinesses(false);
+                }
+              }}
               disabled={loadingBusinesses}
             >
               <BsBuilding />
               <span>{selectedBusiness?.name || "Business"}</span>
               <BsChevronDown />
             </button>
+
             {showBusinessDropdown && (
               <div className="compact-dropdown">
-                {businesses.map((b) => (
-                  <div
-                    key={b.id}
-                    className={`dropdown-option ${selectedBusiness?.id === b.id ? "selected" : ""}`}
-                    onClick={() => {
-                      setSelectedBusiness(b);
-                      setShowBusinessDropdown(false);
-                    }}
-                  >
-                    <span className="name">{b.name}</span>
-                    {b.location && <span className="location">{b.location}</span>}
-                  </div>
-                ))}
+                {loadingBusinesses ? (
+                  <div className="dropdown-option">Loading...</div>
+                ) : (
+                  businesses.map((b) => (
+                    <div
+                      key={b.id}
+                      className={`dropdown-option ${
+                        selectedBusiness?.id === b.id ? "selected" : ""
+                      }`}
+                      onClick={() => {
+                        setSelectedBusiness(b);
+                        setShowBusinessDropdown(false);
+                      }}
+                    >
+                      <span className="name">{b.name}</span>
+                      {b.location && <span className="location">{b.location}</span>}
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
