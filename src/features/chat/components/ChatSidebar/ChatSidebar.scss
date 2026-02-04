@@ -521,3 +521,85 @@
     width: 100%;
   }
 }
+/* ===== BUSINESS SECTION FIX ONLY ===== */
+
+.business-section {
+  .business-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .business-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0; // IMPORTANT for ellipsis
+    cursor: pointer;
+  }
+
+  .business-info {
+    display: flex;
+    flex-direction: column;
+    max-width: 170px; // adjust if needed
+    overflow: hidden;
+  }
+
+  .business-name,
+  .business-location {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+  }
+
+  .business-name {
+    font-weight: 500;
+  }
+
+  .menu-icon {
+    flex-shrink: 0; // keeps dots fixed
+    cursor: pointer;
+  }
+}
+/* ===== CONVERSATION LIST FIX ONLY ===== */
+
+.conversation-list {
+  .conversation-item-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .conversation-item {
+    flex: 1;
+    min-width: 0; // REQUIRED for ellipsis
+    cursor: pointer;
+  }
+
+  .conversation-item .title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .menu-wrapper {
+    flex-shrink: 0; // keeps 3-dot icon visible
+    position: relative;
+  }
+
+  .menu-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+}
+.chat-sidebar,
+.chat-section {
+  overflow: hidden;
+}

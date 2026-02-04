@@ -11,15 +11,12 @@ import {
   BsBuilding as BsBuildingRaw,
   BsArrowLeft as BsArrowLeftRaw,
 } from "react-icons/bs";
-
 const BsThreeDotsVertical = BsThreeRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsPlus = BsPlusRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsBuilding = BsBuildingRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsArrowLeft = BsArrowLeftRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-
 /* MODALS */
 import BusinessModal from "./BusinessModal/BusinessModal";
-
 /* API + REDUX */
 import { fetchAllConversations } from "@/app/store/slices/conversationSlice";
 import {
@@ -29,69 +26,56 @@ import {
   GetTemplates,
   PostconversationDetailOfAI,
 } from "@/utils/api/Api";
-
 /* TYPES */
 interface ConversationItem {
   id: number;
   title: string;
 }
-
 interface Business {
   id: number;
   name: string;
   location: string;
   type: string;
 }
-
 interface Template {
   id: number;
   name: string;
 }
-
 interface ChatSidebarProps {
   onSelectConversation: (conv: any) => void;
   onClearTemplate?: () => void; // Optional: clear selected template
 }
-
 /* COMPONENT */
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClearTemplate }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletedId, setDeletedId] = useState<number | null>(null);
   const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [showDropdownId, setShowDropdownId] = useState<number | null>(null);
-
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [, setTemplates] = useState<Template[]>([]);
-
-
   /* Fetch Businesses & Templates */
-  const FetchGetBusiness=()=>{
- GetBusiness()
+  const FetchGetBusiness = () => {
+    GetBusiness()
       .then((res) => setBusinesses(res?.data?.data || []))
       .catch((e) => console.log("Error fetching businesses:", e));
   }
   useEffect(() => {
-   FetchGetBusiness()
-
+    FetchGetBusiness()
     GetTemplates()
       .then((res) => setTemplates(res?.data?.data || []))
       .catch((e) => console.log("Error fetching templates:", e));
   }, []);
-
   /* Fetch Conversations */
   const conversationState = useSelector(
     (state: any) => state?.rootReducer?.conversations || {}
   );
-
   useEffect(() => {
     dispatch(fetchAllConversations() as any);
   }, [dispatch]);
-
   /* Select Conversation */
   const handleConversationClick = async (item: ConversationItem) => {
     setSelectedConversationId(item.id);
@@ -104,7 +88,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
       message.error("Failed to load conversation.");
     }
   };
-
   /* Delete Conversation */
   const handleDelete = async (id: number) => {
     setDeletingId(id);
@@ -126,7 +109,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
       setDeletingId(null);
     }
   };
-
   /* New Chat Click */
   const handleNewChatClick = () => {
     setSelectedConversationId(null);
@@ -134,13 +116,11 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     onSelectConversation(null);
     if (onClearTemplate) onClearTemplate(); // Clear selected template if callback provided
   };
-
   /* Select Business */
   const handleBusinessSelect = (businessId: number) => {
     const business = businesses.find((b) => b.id === businessId) || null;
     setSelectedBusiness(business);
   };
-
   const handleBusinessSubmit = (formData: any) => {
     const newBusiness: Business = {
       id: businesses.length + 1,
@@ -153,26 +133,24 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     message.success("Business added successfully!");
     FetchGetBusiness()
   };
-
   const handleBackToHome = () => navigate("/");
   const handleDeleteBusiness = async (id: React.SetStateAction<number | null>) => {
-  setDeletingId(id);
-  try {
-    await DeleteBusinessnApi(id);
-    setBusinesses((prev) => prev.filter((b) => b.id !== id));
-
-    message.success("Business deleted successfully!");
-    FetchGetBusiness()
-    setDeletedId(id);
-    setTimeout(() => setDeletedId(null), 2000);
-  } catch (err) {
-    console.error("Error deleting business", err);
-    message.error("Failed to delete business.");
-  } finally {
-    setDeletingId(null);
-  }
-};
-console.log(businesses,"businesses")
+    setDeletingId(id);
+    try {
+      await DeleteBusinessnApi(id);
+      setBusinesses((prev) => prev.filter((b) => b.id !== id));
+      message.success("Business deleted successfully!");
+      FetchGetBusiness()
+      setDeletedId(id);
+      setTimeout(() => setDeletedId(null), 2000);
+    } catch (err) {
+      console.error("Error deleting business", err);
+      message.error("Failed to delete business.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+  console.log(businesses, "businesses")
   return (
     <div className="chat-sidebar">
       {/* BACK BUTTON */}
@@ -180,18 +158,15 @@ console.log(businesses,"businesses")
         <BsArrowLeft className="back-icon" />
         <span>Back to Home</span>
       </button>
-
       {/* CHAT SECTION */}
       <div className="sidebar-section chat-section">
         <button className="new-chat-button" onClick={handleNewChatClick}>
           <BsPlus className="icon" />
           <span>New Chat</span>
         </button>
-
         <div className="section-header">
           <h5>Recent Chats</h5>
         </div>
-
         <ul className="conversation-list">
           {conversationState?.items?.map((item: ConversationItem) => (
             <li
@@ -203,11 +178,36 @@ console.log(businesses,"businesses")
                 className="conversation-item"
                 onClick={() => handleConversationClick(item)}
               >
-                <span className="title">{item.title}</span>
+                <span className="title" title={item.title}>
+                  {item.title}
+                </span>
               </div>
-
               {/* Custom Dropdown */}
-              <div className="menu-wrapper">
+               <Dropdown
+                trigger={["click"]}
+                overlay={
+                  <Menu
+                    items={[
+                      {
+                        key: "delete",
+                        label:
+                          deletingId === item.id ? (
+                            <span style={{ color: "#999" }}>Deleting...</span>
+                          ) : deletedId === item.id ? (
+                            <span style={{ color: "green" }}>Deleted ✓</span>
+                          ) : (
+                            <span onClick={() => handleDelete(item.id)}>
+                              Delete
+                            </span>
+                          ),
+                      },
+                    ]}
+                  />
+                }
+              >
+                <BsThreeDotsVertical className="menu-icon" />
+              </Dropdown>
+              {/* <div className="menu-wrapper">
                 <button
                   className="menu-icon"
                   onClick={(e) => {
@@ -217,7 +217,6 @@ console.log(businesses,"businesses")
                 >
                   <BsThreeDotsVertical />
                 </button>
-
                 {showDropdownId === item.id && (
                   <>
                     <div
@@ -247,12 +246,11 @@ console.log(businesses,"businesses")
                     </div>
                   </>
                 )}
-              </div>
+              </div> */}
             </li>
           ))}
         </ul>
       </div>
-
       {/* BUSINESS SECTION */}
       <div className="sidebar-section business-section">
         <div className="section-header">
@@ -264,7 +262,6 @@ console.log(businesses,"businesses")
             <BsPlus />
           </button>
         </div>
-
         <ul className="business-list">
           {businesses?.map((business) => (
             <li
@@ -273,15 +270,24 @@ console.log(businesses,"businesses")
             >
               <div
                 className="business-card-inner"
-                onClick={() => handleBusinessSelect(business.id)}
+                // onClick={() => handleBusinessSelect(business.id)}
               >
                 <BsBuilding className="business-icon" />
                 <div className="business-info">
-                  <span className="business-name">{business?.name}</span>
-                  <span className="business-location">{business?.location}</span>
+                  <span
+                    className="business-name"
+                    title={business?.name}
+                  >
+                    {business?.name}
+                  </span>
+                  <span
+                    className="business-location"
+                    title={business?.location}
+                  >
+                    {business?.location}
+                  </span>
                 </div>
               </div>
-
               <Dropdown
                 trigger={["click"]}
                 overlay={
@@ -307,11 +313,9 @@ console.log(businesses,"businesses")
                 <BsThreeDotsVertical className="menu-icon" />
               </Dropdown>
             </li>
-
           ))}
         </ul>
       </div>
-
       {/* BUSINESS MODAL */}
       <BusinessModal
         isOpen={isBusinessModalOpen}
@@ -321,5 +325,4 @@ console.log(businesses,"businesses")
     </div>
   );
 };
-
 export default ChatSidebar;

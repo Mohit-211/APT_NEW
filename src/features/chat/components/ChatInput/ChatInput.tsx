@@ -13,15 +13,17 @@ import {
 } from "react-icons/bs";
 
 import { message as antdMessage } from "antd";
-import { GetBusiness } from "@/utils/api/Api";
+import { GetBusiness, GetTemplates } from "@/utils/api/Api";
 import ProductTour from "../ProductTour/ProductTour";
 
 /* ICON CASTING */
 const FiSend = FiSendRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsBuilding = BsBuildingRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 const BsFileText = BsFileTextRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const BsCurrencyDollar = BsCurrencyDollarRaw as React.FC<React.SVGProps<SVGSVGElement>>;
-const BsChevronDown = BsChevronDownRaw as React.FC<React.SVGProps<SVGSVGElement>>;
+const BsCurrencyDollar =
+  BsCurrencyDollarRaw as React.FC<React.SVGProps<SVGSVGElement>>;
+const BsChevronDown =
+  BsChevronDownRaw as React.FC<React.SVGProps<SVGSVGElement>>;
 
 /* =======================
    TYPES
@@ -53,41 +55,37 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [message, setMessage] = useState("");
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loadingBusinesses, setLoadingBusinesses] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<APTTemplate | null>(null);
+
   const [pricingMode, setPricingMode] = useState<"auto" | "manual">("auto");
   const [manualPricing, setManualPricing] = useState("");
+
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showPricingDropdown, setShowPricingDropdown] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [showTour, setShowTour] = useState(false);
+
+  const [loadingBusinesses, setLoadingBusinesses] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const businessDropdownRef = useRef<HTMLDivElement>(null);
   const pricingDropdownRef = useRef<HTMLDivElement>(null);
 
   /* =======================
-     AUTO SELECT BUSINESS & TEMPLATE
+     FETCH BUSINESSES
   ======================= */
-  useEffect(() => {
-    const conversationChat = currentConversation?.chats?.[0];
-    if (!conversationChat || !businesses.length) return;
-
-    const matchedBusiness = businesses.find((b) => b.id === conversationChat.business_id);
-    if (matchedBusiness) setSelectedBusiness(matchedBusiness);
-
-    if (conversationChat.template_id) {
-      setSelectedTemplate({
-        id: conversationChat.template_id,
-        name: `Template #${conversationChat.template_id}`,
-        category: "Unknown",
-        description: "",
-        preview: "",
-        features: [] as string[],
-      } as APTTemplate);
+  const fetchBusinesses = async () => {
+    try {
+      setLoadingBusinesses(true);
+      const res = await GetBusiness();
+      setBusinesses(res?.data?.data || []);
+    } catch {
+      antdMessage.error("Unable to load businesses");
+    } finally {
+      setLoadingBusinesses(false);
     }
-  }, [currentConversation, businesses]);
+  };
 
   /* =======================
      RESET ON NEW CHAT
@@ -101,37 +99,75 @@ const ChatInput: React.FC<ChatInputProps> = ({
   }, [resetTrigger]);
 
   /* =======================
-     CLOSE DROPDOWNS ON CLICK OUTSIDE
+     CLOSE DROPDOWNS
   ======================= */
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (businessDropdownRef.current && !businessDropdownRef.current.contains(e.target as Node)) {
+    const handler = (e: MouseEvent) => {
+      if (
+        businessDropdownRef.current &&
+        !businessDropdownRef.current.contains(e.target as Node)
+      ) {
         setShowBusinessDropdown(false);
       }
-      if (pricingDropdownRef.current && !pricingDropdownRef.current.contains(e.target as Node)) {
+      if (
+        pricingDropdownRef.current &&
+        !pricingDropdownRef.current.contains(e.target as Node)
+      ) {
         setShowPricingDropdown(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  /* =======================
+     RESTORE FROM CHAT
+  ======================= */
+  useEffect(() => {
+    if (!currentConversation) return;
+
+    (async () => {
+      try {
+        await fetchBusinesses();
+
+        const chat = currentConversation?.chats?.[0];
+        if (!chat) return;
+
+        // BUSINESS
+        const business = businesses.find(
+          (b) => b.id === chat.business_id
+        );
+        if (business) setSelectedBusiness(business);
+
+        // TEMPLATE
+        const res = await GetTemplates();
+        const templates: APTTemplate[] = res?.data?.data || [];
+        const template = templates.find(
+          (t) => t.id === chat.template_id
+        );
+        if (template) setSelectedTemplate(template);
+      } catch {
+        antdMessage.error("Failed to restore conversation data");
+      }
+    })();
+  }, [currentConversation]);
 
   /* =======================
      SEND MESSAGE
   ======================= */
   const handleSend = () => {
-    if (!message.trim()) return antdMessage.error("Please enter a message");
-    if (!selectedBusiness) return antdMessage.error("Please select a business");
-    if (!selectedTemplate?.id) return antdMessage.error("Please select a template");
+    if (!message.trim()) return antdMessage.error("Enter a message");
+    if (!selectedBusiness) return antdMessage.error("Select a business");
+    if (!selectedTemplate) return antdMessage.error("Select a template");
     if (pricingMode === "manual" && !manualPricing.trim())
-      return antdMessage.error("Please enter manual pricing");
+      return antdMessage.error("Enter manual pricing");
 
     onSendMessage({
       text: message.trim(),
       template_id: selectedTemplate.id,
       business_id: selectedBusiness.id,
       auto_price: pricingMode === "auto",
-      manual_price: pricingMode === "manual" ? manualPricing.trim() : undefined,
+      manual_price: pricingMode === "manual" ? manualPricing : undefined,
     });
 
     setMessage("");
@@ -140,64 +176,34 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   /* =======================
-     INPUT HANDLERS
+     TEXTAREA AUTO RESIZE
   ======================= */
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + "px";
+      textareaRef.current.style.height =
+        Math.min(textareaRef.current.scrollHeight, 200) + "px";
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleTemplatePick = (template: APTTemplate) => {
-    setSelectedTemplate(template);
-    setIsTemplateModalOpen(false);
-    onTemplateSelect?.(template);
-  };
-
-  /* =======================
-     RENDER
-  ======================= */
   return (
     <div className="chat-input-wrapper">
-      {/* START TOUR BUTTON */}
-      <div style={{ marginBottom: 10 }}>
-        <button className="tour-btn" onClick={() => setShowTour(true)}>
-          <FaLightbulb style={{ marginRight: 6 }} />
-          How to Use
-        </button>
-      </div>
+      <button className="tour-btn" onClick={() => setShowTour(true)}>
+        <FaLightbulb /> How to Use
+      </button>
 
       <div className="chat-input-container">
-        {/* OPTIONS ROW */}
+        {/* OPTIONS */}
         <div className="options-row">
           {/* BUSINESS */}
-          <div className="option-item" ref={businessDropdownRef} id="tour-business">
+          <div ref={businessDropdownRef} className="option-item">
             <button
               className={`option-btn ${selectedBusiness ? "active" : ""}`}
-              onClick={async () => {
-                setShowBusinessDropdown((prev) => !prev);
-
-                // CALL API EVERY TIME dropdown is clicked
-                setLoadingBusinesses(true);
-                try {
-                  const res = await GetBusiness();
-                  setBusinesses(res?.data?.data || []);
-                } catch {
-                  antdMessage.error("Unable to load businesses");
-                } finally {
-                  setLoadingBusinesses(false);
-                }
+              onClick={() => {
+                setShowBusinessDropdown((p) => !p);
+                fetchBusinesses();
               }}
-              disabled={loadingBusinesses}
             >
               <BsBuilding />
               <span>{selectedBusiness?.name || "Business"}</span>
@@ -212,16 +218,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   businesses.map((b) => (
                     <div
                       key={b.id}
-                      className={`dropdown-option ${
-                        selectedBusiness?.id === b.id ? "selected" : ""
-                      }`}
+                      className="dropdown-option"
                       onClick={() => {
                         setSelectedBusiness(b);
                         setShowBusinessDropdown(false);
                       }}
                     >
-                      <span className="name">{b.name}</span>
-                      {b.location && <span className="location">{b.location}</span>}
+                      {b.name}
                     </div>
                   ))
                 )}
@@ -233,17 +236,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <button
             className={`option-btn ${selectedTemplate ? "active" : ""}`}
             onClick={() => setIsTemplateModalOpen(true)}
-            id="tour-template"
           >
             <BsFileText />
             <span>{selectedTemplate?.name || "Template"}</span>
           </button>
 
           {/* PRICING */}
-          <div className="option-item" ref={pricingDropdownRef} id="tour-pricing">
+          <div ref={pricingDropdownRef} className="option-item">
             <button
-              className={`option-btn ${pricingMode === "manual" ? "active" : ""}`}
-              onClick={() => setShowPricingDropdown((prev) => !prev)}
+              className="option-btn"
+              onClick={() => setShowPricingDropdown((p) => !p)}
             >
               <BsCurrencyDollar />
               <span>{pricingMode === "auto" ? "Auto Pricing" : "Manual Pricing"}</span>
@@ -252,77 +254,46 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
             {showPricingDropdown && (
               <div className="compact-dropdown">
-                <div
-                  className={`dropdown-option ${pricingMode === "auto" ? "selected" : ""}`}
-                  onClick={() => {
-                    setPricingMode("auto");
-                    setShowPricingDropdown(false);
-                  }}
-                >
-                  Auto Fetch Pricing
-                </div>
-                <div
-                  className={`dropdown-option ${pricingMode === "manual" ? "selected" : ""}`}
-                  onClick={() => {
-                    setPricingMode("manual");
-                    setShowPricingDropdown(false);
-                  }}
-                >
-                  Manual Pricing
-                </div>
+                <div onClick={() => setPricingMode("auto")}>Auto Pricing</div>
+                <div onClick={() => setPricingMode("manual")}>Manual Pricing</div>
               </div>
             )}
           </div>
 
-          {/* MANUAL PRICING INPUT */}
           {pricingMode === "manual" && (
             <input
-              type="text"
               className="manual-pricing-input"
-              placeholder="Enter pricing..."
+              placeholder="Enter pricing"
               value={manualPricing}
               onChange={(e) => setManualPricing(e.target.value)}
             />
           )}
         </div>
 
-        {/* MESSAGE INPUT */}
-        <div className="chat-input-box" id="tour-prompt">
-          <span className="char-count">{message.length}/3000</span>
+        {/* INPUT */}
+        <div className="chat-input-box">
           <textarea
             ref={textareaRef}
             value={message}
-            placeholder="Ask Ceddie..."
             onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            maxLength={3000}
+            placeholder="Ask Ceddie..."
           />
-          <button
-            className="send-button"
-            onClick={handleSend}
-            disabled={
-              !message.trim() ||
-              !selectedBusiness ||
-              !selectedTemplate ||
-              (pricingMode === "manual" && !manualPricing.trim())
-            }
-            id="tour-send"
-          >
+          <button className="send-button" onClick={handleSend}>
             <FiSend />
           </button>
         </div>
       </div>
 
-      {/* TEMPLATE MODAL */}
       <TemplateModal
         isOpen={isTemplateModalOpen}
         onClose={() => setIsTemplateModalOpen(false)}
-        onSelect={handleTemplatePick}
+        onSelect={(t) => {
+          setSelectedTemplate(t);
+          onTemplateSelect?.(t);
+        }}
         selectedTemplate={selectedTemplate}
       />
 
-      {/* PRODUCT TOUR */}
       {showTour && <ProductTour onFinish={() => setShowTour(false)} />}
     </div>
   );

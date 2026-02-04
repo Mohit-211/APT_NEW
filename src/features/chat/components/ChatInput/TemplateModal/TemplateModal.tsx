@@ -37,6 +37,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
   const [previewTemplate, setPreviewTemplate] = useState<APTTemplate | null>(
     null
   );
+  console.log(selectedTemplate,"selectedTemplate")
  /* TEMPLATE LIST — Now with content */
 const [templates, setTemplates] = useState<APTTemplate[]>([]);
 

@@ -77,6 +77,7 @@ const ChatLayout: React.FC = () => {
           }
           resetTrigger={selectedConversation?.id}
         />
+        
       </main>
     </div>
   );

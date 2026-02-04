@@ -454,7 +454,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       <ChatInput
         onSendMessage={handleSendMessage}
         resetTrigger={resetTrigger}
-        currentConversation={currentConversation}
+        // currentConversation={currentConversation}
+        currentConversation={conversation} 
       />
 
       {/* PROPOSAL MODAL */}
