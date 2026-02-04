@@ -3,7 +3,6 @@ import "./ChatSidebar.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Dropdown, Menu, message } from "antd";
-import { DeleteOutlined, LoadingOutlined, CheckOutlined } from "@ant-design/icons";
 /* ICONS */
 import {
   BsThreeDotsVertical as BsThreeRaw,
@@ -54,7 +53,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
   const [deletedId, setDeletedId] = useState<number | null>(null);
   const [isBusinessModalOpen, setIsBusinessModalOpen] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
-  const [showDropdownId, setShowDropdownId] = useState<number | null>(null);
+  // const [showDropdownId, setShowDropdownId] = useState<number | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [, setTemplates] = useState<Template[]>([]);
   /* Fetch Businesses & Templates */
@@ -91,7 +90,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
   /* Delete Conversation */
   const handleDelete = async (id: number) => {
     setDeletingId(id);
-    setShowDropdownId(null);
+    // setShowDropdownId(null);
     try {
       await DeleteConversationApi(id);
       dispatch(fetchAllConversations() as any);
@@ -117,10 +116,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onSelectConversation, onClear
     if (onClearTemplate) onClearTemplate(); // Clear selected template if callback provided
   };
   /* Select Business */
-  const handleBusinessSelect = (businessId: number) => {
-    const business = businesses.find((b) => b.id === businessId) || null;
-    setSelectedBusiness(business);
-  };
+  // const handleBusinessSelect = (businessId: number) => {
+  //   const business = businesses.find((b) => b.id === businessId) || null;
+  //   setSelectedBusiness(business);
+  // };
   const handleBusinessSubmit = (formData: any) => {
     const newBusiness: Business = {
       id: businesses.length + 1,
