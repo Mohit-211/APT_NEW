@@ -47,7 +47,7 @@ const Banner: React.FC<BannerProps> = ({
           )}
 
           {/* Fallback Icon on Error */}
-          {imageError ? (
+          {/* {imageError ? (
             <div className="banner__fallback">
               <svg
                 width="64"
@@ -64,7 +64,7 @@ const Banner: React.FC<BannerProps> = ({
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             </div>
-          ) : (
+          ) : ( */}
             <img
               src={CalculatorImage ?? "/assets/apt.png"}
               alt={
@@ -78,7 +78,7 @@ const Banner: React.FC<BannerProps> = ({
               onLoad={handleImageLoad}
               onError={handleImageError}
             />
-          )}
+          {/* )} */}
         </div>
       </div>
 

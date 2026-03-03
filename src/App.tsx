@@ -51,6 +51,8 @@ import EditorPage from "@/features/chat/EditorPage/EditorPage";
 // API
 import { checkUserStatus } from "@/utils/api/Api";
 import ChatGuide from "./features/ChatGuide/ChatGuide";
+import ProfitabilityModule from "./features/calculators/components/ProfitabilityModule";
+import PartnershipDiscounts from "./features/calculators/components/PartnershipDiscounts";
 
 function AppContent() {
   const location = useLocation();
@@ -183,6 +185,22 @@ function AppContent() {
             element={
               <Calculator>
                 <GrossPayCalculator />
+              </Calculator>
+            }
+          />
+          <Route
+            path="/calculator/profitability-module"
+            element={
+              <Calculator>
+                <ProfitabilityModule />
+              </Calculator>
+            }
+          />
+           <Route
+            path="/calculator/partnership-pricing-volume-discounts"
+            element={
+              <Calculator>
+                <PartnershipDiscounts />
               </Calculator>
             }
           />
