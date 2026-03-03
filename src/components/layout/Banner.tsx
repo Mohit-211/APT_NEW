@@ -13,14 +13,14 @@ const Banner: React.FC<BannerProps> = ({
   CalculatorImage,
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  // const [imageError, setImageError] = useState(false);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
 
   const handleImageError = () => {
-    setImageError(true);
+    // setImageError(true);
     setImageLoaded(true);
   };
 
