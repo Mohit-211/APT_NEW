@@ -16,6 +16,7 @@ import {
   ProposalByCategoryApi,
 } from "@/utils/api/Api";
 import "./Proposal.scss";
+import ProposalImage from "../../../assets/apt.png"
 
 // Types ------------------------------------------------------------------
 interface CategoryItem {
@@ -224,7 +225,7 @@ export default function Proposal() {
       </div>
     );
   }
-
+console.log(selectedCategory)
   // Render ---------------------------------------------------------------
   return (
     <div className="proposal-page">
@@ -233,7 +234,7 @@ export default function Proposal() {
         CalculatorName={title}
         CalculatorDesc="Browse and manage your proposal templates"
         CalculatorImage={
-          selectedCategory === "all" ? "/assets/proposal.jpg" : Image_URL + img
+          selectedCategory === "all" ? ProposalImage : Image_URL + img
         }
       />
 

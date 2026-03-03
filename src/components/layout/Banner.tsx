@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./Banner.scss";
-
+import ProposalImage from "../../assets/apt.png"
 interface BannerProps {
   CalculatorName?: string;
   CalculatorDesc?: string;
@@ -23,7 +23,7 @@ const Banner: React.FC<BannerProps> = ({
     // setImageError(true);
     setImageLoaded(true);
   };
-
+console.log(CalculatorImage,"CalculatorImage")
   return (
     <div className="banner">
       <div className="banner__container">
@@ -65,19 +65,31 @@ const Banner: React.FC<BannerProps> = ({
               </svg>
             </div>
           ) : ( */}
-            <img
-              src={CalculatorImage ?? "/assets/apt.png"}
-              alt={
-                CalculatorName
-                  ? `${CalculatorName} illustration`
-                  : "Banner illustration"
-              }
-              className={`banner__image ${
-                imageLoaded ? "banner__image--loaded" : ""
-              }`}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
+         {CalculatorImage ? (
+  <img
+    src={CalculatorImage ?? "/assets/proposal.jpg"}
+    alt={
+      CalculatorName
+        ? `${CalculatorName} illustration`
+        : "Banner illustration"
+    }
+    className={`banner__image ${
+      imageLoaded ? "banner__image--loaded" : ""
+    }`}
+    onLoad={handleImageLoad}
+    onError={handleImageError}
+  />
+) : (
+  <img
+    src={ProposalImage ?? "/assets/proposal.jpg"}
+    alt="Proposal illustration"
+    className={`banner__image ${
+      imageLoaded ? "banner__image--loaded" : ""
+    }`}
+    onLoad={handleImageLoad}
+    onError={handleImageError}
+  />
+)}
           {/* )} */}
         </div>
       </div>
